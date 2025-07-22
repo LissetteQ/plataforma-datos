@@ -1,0 +1,35 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": { "codigo_comuna": "13101", "nombre": "Santiago" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [-70.680, -33.460],
+            [-70.685, -33.465],
+            [-70.675, -33.465],
+            [-70.680, -33.460]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "codigo_comuna": "13102", "nombre": "Providencia" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [-70.660, -33.440],
+            [-70.665, -33.445],
+            [-70.655, -33.445],
+            [-70.660, -33.440]
+          ]
+        ]
+      }
+    }
+  ]
+}
