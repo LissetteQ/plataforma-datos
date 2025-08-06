@@ -47,6 +47,13 @@ const Footer = () => {
           <RssFeedIcon />
         </IconButton>
       </Box>
+      <Box>
+        <img
+          src="/img/FES-Logo_Standard_Rot_Bildschirm (1).png"
+          alt="Logo Fundación Nodo XXI Blanco"
+          style={{ height: '60px', objectFit: 'contain' }}
+        />
+      </Box>
     </Box>
   );
 };

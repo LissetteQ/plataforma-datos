@@ -9,25 +9,26 @@ import {
 import PeopleIcon from '@mui/icons-material/People';
 import TrendingDownIcon from '@mui/icons-material/TrendingDown';
 import BarChartIcon from '@mui/icons-material/BarChart';
+import GraficoTrabajoPorAnio from '../components/GraficoTrabajoPorAnio.jsx';
 
 export default function Trabajo() {
   const dataCards = [
     {
       icon: PeopleIcon,
       title: 'Fuerza Laboral',
-      value: '9.2M',
-      subtitle: 'Personas activas',
+      value: '4.239',
+      subtitle: 'Personas activas (muestra 2024)',
     },
     {
       icon: TrendingDownIcon,
       title: 'Desempleo',
-      value: '8.7%',
-      subtitle: 'Tasa nacional',
+      value: '31.6%',
+      subtitle: 'Tasa nacional (muestra)',
     },
     {
       icon: BarChartIcon,
       title: 'Salario Mínimo',
-      value: '$380.000',
+      value: '$460.000',
       subtitle: 'Pesos chilenos',
     },
   ];
@@ -91,21 +92,8 @@ export default function Trabajo() {
         ))}
       </Grid>
 
-      <Box
-        sx={{
-          mt: 5,
-          p: 3,
-          borderRadius: 2,
-          border: '1px solid #e0e0e0',
-          textAlign: 'center',
-        }}
-      >
-        <Typography variant="h6" sx={{ fontWeight: 700 }}>
-          Próximamente
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-          Esta sección estará disponible próximamente con datos detallados sobre trabajo en Chile.
-        </Typography>
+      <Box sx={{ mt: 5 }}>
+        <GraficoTrabajoPorAnio />
       </Box>
     </Container>
   );

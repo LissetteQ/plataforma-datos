@@ -7,7 +7,7 @@ import Home from './pages/Home';
 import Pensiones from './pages/Pensiones';
 import Mapa from './pages/Mapa';
 import Pobreza from './pages/Pobreza';
-import Educacion from './pages/Educacion';
+import Macroeconomia from './pages/Macroeconomia';
 import Salud from './pages/Salud';
 import Trabajo from './pages/Trabajo';
 import ExplorarDatos from './pages/ExplorarDatos';
@@ -45,7 +45,7 @@ export default function App() {
               <Route path="/pensiones" element={<Pensiones />} />
               <Route path="/mapa" element={<Mapa />} />
               <Route path="/pobreza" element={<Pobreza />} />
-              <Route path="/educacion" element={<Educacion />} />
+              <Route path="/macroeconomia" element={<Macroeconomia />} />
               <Route path="/salud" element={<Salud />} />
               <Route path="/trabajo" element={<Trabajo />} />
               <Route path="/documentacion" element={<Documentacion />} />

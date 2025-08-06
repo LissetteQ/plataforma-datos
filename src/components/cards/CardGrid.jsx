@@ -7,8 +7,8 @@ const cards = [
     id: 1,
     title: 'Macroeconomía',
     description: 'Datos relevantes sobre el desempeño macroeconómico de Chile: PIB, inflación y empleo.',
-    image: '/img/Educacion.jpg',
-    route: '/educacion',
+    image: '/img/Macroeconomia.jpg',
+    route: '/macroeconomia', 
   },
   {
     id: 2,
@@ -57,7 +57,7 @@ const CardGrid = () => {
           title={card.title}
           description={card.description}
           image={card.image}
-          route={card.route}       // ✅ ¡AQUÍ se pasa el route!
+          route={card.route} 
         />
       ))}
     </Box>
