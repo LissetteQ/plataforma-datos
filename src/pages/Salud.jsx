@@ -1,14 +1,24 @@
+// src/pages/Salud.jsx
 import React from 'react';
 import {
   Box,
   Container,
   Typography,
   Grid,
+  Divider,
   Paper,
 } from '@mui/material';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import PeopleIcon from '@mui/icons-material/People';
 import MonitorHeartIcon from '@mui/icons-material/MonitorHeart';
+
+// Importar componentes gráficos específicos de Salud
+import GraficoSexoSalud from '../components/GraficoSexoSalud';
+import GraficoTipoBeneficiarioSalud from '../components/GraficoTipoBeneficiarioSalud';
+import GraficoEdadSalud from '../components/GraficoEdadSalud';
+import GraficoVigenciaSalud from '../components/GraficoVigenciaSalud';
+import GraficoRegionSalud from '../components/GraficoRegionSalud';
+import GraficoFonasaIsaprePorAnio from '../components/GraficoFonasaIsaprePorAnio'; // ✅ este es el correcto
 
 export default function Salud() {
   const dataCards = [
@@ -44,7 +54,7 @@ export default function Salud() {
           color: '#e53935',
         }}
       >
-        Salud
+        Salud en Chile
       </Typography>
 
       <Typography
@@ -57,21 +67,20 @@ export default function Salud() {
           mb: 4,
         }}
       >
-        Indicadores de salud pública, acceso a servicios médicos, sistema de salud y bienestar en Chile.
+        Indicadores clave del sistema de salud, incluyendo distribución por edad, sexo, tipo de beneficiario y cobertura regional.
       </Typography>
 
       <Grid container spacing={3} justifyContent="center">
         {dataCards.map((item, index) => (
           <Grid key={index} item xs={12} sm={6} md={4}>
             <Paper
-              elevation={2}
+              elevation={3}
               sx={{
                 p: 2,
+                borderRadius: 2,
                 display: 'flex',
                 flexDirection: 'column',
-                alignItems: 'flex-start',
                 gap: 1,
-                borderRadius: 2,
               }}
             >
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -91,21 +100,18 @@ export default function Salud() {
         ))}
       </Grid>
 
-      <Box
-        sx={{
-          mt: 5,
-          p: 3,
-          borderRadius: 2,
-          border: '1px solid #e0e0e0',
-          textAlign: 'center',
-        }}
-      >
-        <Typography variant="h6" sx={{ fontWeight: 700 }}>
-          Próximamente
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-          Esta sección estará disponible próximamente con datos detallados sobre salud en Chile.
-        </Typography>
+      <Box sx={{ mt: 6 }}>
+        <GraficoSexoSalud />
+        <Divider sx={{ my: 4 }} />
+        <GraficoTipoBeneficiarioSalud />
+        <Divider sx={{ my: 4 }} />
+        <GraficoEdadSalud />
+        <Divider sx={{ my: 4 }} />
+        <GraficoVigenciaSalud />
+        <Divider sx={{ my: 4 }} />
+        <GraficoRegionSalud />
+        <Divider sx={{ my: 4 }} />
+        <GraficoFonasaIsaprePorAnio />
       </Box>
     </Container>
   );

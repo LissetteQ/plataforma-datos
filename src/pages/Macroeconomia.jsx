@@ -50,6 +50,15 @@ const bloques = [
       { id: "F068.B1.VAR.T0.0.S.N.Z.Z.Z.Z.6.0.M", nombre: "Balanza Comercial Mensual" },
     ],
   },
+  {
+    titulo: "Tasa de Interés (TPM)",
+    descripcion:
+      "La Tasa de Política Monetaria (TPM) es definida por el Banco Central y orienta el costo del crédito en la economía. Es un instrumento clave de política monetaria.",
+    series: [
+      { id: "F022.TPM.TIN.D001.NO.Z.D", nombre: "TPM diaria" },
+      { id: "F022.TPM.TIN.M001.NO.Z.M", nombre: "TPM mensual" },
+    ],
+  },
 ];
 
 const Macroeconomia = () => {
@@ -59,36 +68,66 @@ const Macroeconomia = () => {
   }));
 
   return (
-    <Box p={3}>
+    <Box p={{ xs: 2, md: 4 }}>
+      {/* Título */}
+      <Typography variant="h4" gutterBottom sx={{ textAlign: "center" }}>
+        Indicadores Macroeconómicos de Chile
+      </Typography>
+
+      {/* Texto explicativo centrado y justificado */}
+      <Typography
+        variant="body1"
+        sx={{
+          mb: 4,
+          color: 'text.secondary',
+          maxWidth: '92%',
+          mx: 'auto',
+          textAlign: 'justify',
+        }}
+      >
+        En esta sección se presentan los principales indicadores macroeconómicos de Chile a través de gráficos interactivos. Los datos son extraídos directamente desde el Banco Central de Chile y permiten analizar la evolución del Producto Interno Bruto (PIB), la actividad económica (IMACEC), la inflación (IPC), la deuda pública y el comercio exterior del país.
+        <br /><br />
+        Cada bloque temático incluye una breve descripción y diferentes series estadísticas que pueden visualizarse según su periodicidad y categoría. Esta visualización facilita la comprensión del desempeño económico nacional en distintas dimensiones y períodos.
+      </Typography>
+
+      {/* Menú de navegación interno en una sola fila con scroll horizontal */}
       <Box
         sx={{
-          position: "relative",
-          zIndex: 1,
+          overflowX: "auto",
+          whiteSpace: "nowrap",
           bgcolor: "background.paper",
-          mb: 2,
-          display: "flex",
-          gap: 2,
-          flexWrap: "wrap",
-          p: 1,
+          mb: 3,
+          px: 2,
+          py: 1,
           borderBottom: "1px solid #ddd",
+          display: "flex",
+          flexWrap: "nowrap",
+          alignItems: "center",
+          gap: 3,
         }}
       >
         {secciones.map((sec) => (
           <a key={sec.id} href={`#${sec.id}`} style={{ textDecoration: "none" }}>
-            <Typography variant="button" color="primary" sx={{ mr: 2 }}>
+            <Typography
+              variant="button"
+              color="primary"
+              sx={{
+                whiteSpace: "nowrap",
+                fontWeight: 500,
+              }}
+            >
               {sec.label}
             </Typography>
           </a>
         ))}
       </Box>
 
-      <Typography variant="h4" gutterBottom>
-        Indicadores Macroeconómicos de Chile
-      </Typography>
-
+      {/* Bloques con gráficos */}
       {bloques.map((bloque) => (
-        <Box id={bloque.titulo.toLowerCase().replace(/\s/g, "-")}
-             key={bloque.titulo}>
+        <Box
+          id={bloque.titulo.toLowerCase().replace(/\s/g, "-")}
+          key={bloque.titulo}
+        >
           <BloqueEconomico
             titulo={bloque.titulo}
             descripcion={bloque.descripcion}
