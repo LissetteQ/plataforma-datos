@@ -1,52 +1,81 @@
-import React from "react";
+// src/components/GraficoTrabajoPorAnio.jsx
+import React, { useEffect, useState } from "react";
 import {
   ResponsiveContainer,
-  BarChart,
+  ComposedChart,
   Bar,
+  Line,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   Legend,
-  LineChart,
-  Line,
 } from "recharts";
+import { getAnual } from "../services/trabajoApi";
 import { Box, Typography } from "@mui/material";
 
-const data = [
-  { año: "2018", fuerza: 4180, desempleo: 8.2 },
-  { año: "2019", fuerza: 4360, desempleo: 8.7 },
-  { año: "2021", fuerza: 3980, desempleo: 11.3 },
-  { año: "2022", fuerza: 4220, desempleo: 9.1 },
-  { año: "2023", fuerza: 4300, desempleo: 7.9 },
-  { año: "2024", fuerza: 4239, desempleo: 31.6 },
-];
+const fmtMiles = (n) => (n ?? 0).toLocaleString("es-CL");
+const fmtPerc = (n) => `${(n ?? 0).toFixed(1)}%`;
 
 export default function GraficoTrabajoPorAnio() {
+  const [rows, setRows] = useState([]);
+
+  useEffect(() => {
+    getAnual().then((r) => {
+      const data = (r ?? []).map((d) => ({
+        anio: d.anio,
+        fuerza_laboral: d.fuerza_laboral,
+        tasa_desempleo: d.tasa_desempleo,
+      }));
+      setRows(data);
+    });
+  }, []);
+
   return (
-    <Box sx={{ mt: 6 }}>
+    <Box sx={{ mt: 3 }}>
       <Typography variant="h6" sx={{ fontWeight: 700, textAlign: "center", mb: 2 }}>
         Evolución de Fuerza Laboral y Desempleo (Muestra)
       </Typography>
 
-      <ResponsiveContainer width="100%" height={350}>
-        <BarChart data={data} margin={{ top: 20, right: 30, left: 10, bottom: 5 }}>
+      <ResponsiveContainer width="100%" height={360}>
+        <ComposedChart data={rows} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="año" />
-          <YAxis yAxisId="left" orientation="left" />
-          <YAxis yAxisId="right" orientation="right" domain={[0, 100]} />
-          <Tooltip />
+          <XAxis dataKey="anio" />
+          <YAxis
+            yAxisId="left"
+            tickFormatter={fmtMiles}
+            label={{ value: "Fuerza laboral", angle: -90, position: "insideLeft" }}
+          />
+          <YAxis
+            yAxisId="right"
+            orientation="right"
+            domain={[0, 15]}
+            tickFormatter={(v) => `${v}`}
+            label={{ value: "Desempleo (%)", angle: 90, position: "insideRight" }}
+          />
+          <Tooltip
+            formatter={(value, name) =>
+              name === "Fuerza Laboral" ? fmtMiles(value) : fmtPerc(value)
+            }
+            labelFormatter={(l) => `Año: ${l}`}
+          />
           <Legend />
-          <Bar yAxisId="left" dataKey="fuerza" fill="#1976d2" name="Fuerza Laboral" />
+          <Bar
+            yAxisId="left"
+            name="Fuerza Laboral"
+            dataKey="fuerza_laboral"
+            radius={[6, 6, 0, 0]}
+          />
           <Line
             yAxisId="right"
-            type="monotone"
-            dataKey="desempleo"
-            stroke="#fb8c00"
-            strokeWidth={3}
             name="Desempleo (%)"
+            dataKey="tasa_desempleo"
+            strokeWidth={3}
+            dot={{ r: 3 }}
+            activeDot={{ r: 5 }}
+            type="monotone"
           />
-        </BarChart>
+        </ComposedChart>
       </ResponsiveContainer>
     </Box>
   );

@@ -1,4 +1,5 @@
-import React from 'react';
+// src/pages/Trabajo.jsx
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Container,
@@ -6,52 +7,83 @@ import {
   Grid,
   Paper,
   Button,
-} from '@mui/material';
-import PeopleIcon from '@mui/icons-material/People';
-import TrendingDownIcon from '@mui/icons-material/TrendingDown';
-import BarChartIcon from '@mui/icons-material/BarChart';
+} from "@mui/material";
+import PeopleIcon from "@mui/icons-material/People";
+import TrendingDownIcon from "@mui/icons-material/TrendingDown";
+import BarChartIcon from "@mui/icons-material/BarChart";
 
-import GraficoTrabajoPorAnio from '../components/GraficoTrabajoPorAnio.jsx';
-import GraficoSexo from '../components/GraficoSexo.jsx';
-import GraficoCotizaciones from '../components/GraficoCotizaciones.jsx';
-import GraficoIngreso from '../components/GraficoIngreso.jsx';
-import GraficoJornada from '../components/GraficoJornada.jsx';
+import GraficoTrabajoPorAnio from "../components/GraficoTrabajoPorAnio";
+import GraficoSexo from "../components/GraficoSexo";
+import GraficoCotizaciones from "../components/GraficoCotizaciones";
+import GraficoIngreso from "../components/GraficoIngreso";
+import GraficoJornada from "../components/GraficoJornada";
+import GraficoTasas from "../components/GraficoTasas";
+import GraficoPiramide from "../components/GraficoPiramide";
+import GraficoIngresoSexo from "../components/GraficoIngresoSexo";
 
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
+// NUEVOS: ESI (ingresos)
+import ESIIngresosKPIs from "../components/ESIIngresosKPIs";
+import GraficoESIIngresos from "../components/GraficoESIIngresos";
+
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
+import { getAnual, getTasas } from "../services/trabajoApi";
+
+const formMiles = (n) => Math.round((n ?? 0) / 1000).toLocaleString("es-CL");
 
 export default function Trabajo() {
+  const [fuerza, setFuerza] = useState(null);
+  const [desempleo, setDesempleo] = useState(null);
+
+  useEffect(() => {
+    // Fuerza laboral: último año disponible
+    getAnual().then((rows) => {
+      const data = Array.isArray(rows) ? rows : [];
+      if (!data.length) return;
+      const ultimo = data.reduce((a, b) => (a.anio > b.anio ? a : b));
+      setFuerza(ultimo.fuerza_laboral);
+    });
+
+    // Desempleo: 2024T2 Nacional
+    getTasas({ periodo: "2024T2", sexo: "Nacional" }).then((rows) => {
+      const r = (Array.isArray(rows) ? rows : [])[0];
+      if (r?.td != null) setDesempleo(r.td);
+    });
+  }, []);
+
   const dataCards = [
     {
       icon: PeopleIcon,
-      title: 'Fuerza Laboral',
-      value: '4.239',
-      subtitle: 'Personas activas (muestra 2024)',
+      title: "Fuerza Laboral",
+      value: fuerza != null ? formMiles(fuerza) : "—",
+      subtitle: fuerza != null ? "Miles de personas (último año)" : "Cargando...",
     },
     {
       icon: TrendingDownIcon,
-      title: 'Desempleo',
-      value: '31.6%',
-      subtitle: 'Tasa nacional (muestra)',
+      title: "Desempleo",
+      value: desempleo != null ? `${desempleo.toFixed(1)}%` : "—",
+      subtitle: "Tasa nacional (2024T2)",
     },
     {
       icon: BarChartIcon,
-      title: 'Salario Mínimo',
-      value: '$460.000',
-      subtitle: 'Pesos chilenos',
+      title: "Salario Mínimo",
+      value: "$460.000",
+      subtitle: "Pesos chilenos",
     },
   ];
 
   const exportarPDF = async () => {
-    const input = document.getElementById('seccion-trabajo');
-    const canvas = await html2canvas(input);
-    const imgData = canvas.toDataURL('image/png');
-    const pdf = new jsPDF();
-    const imgProps = pdf.getImageProperties(imgData);
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-    pdf.save('reporte-trabajo.pdf');
+    const input = document.getElementById("seccion-trabajo");
+    const canvas = await html2canvas(input, { scale: 2, useCORS: true });
+    const imgData = canvas.toDataURL("image/png");
+    const pdf = new jsPDF({ unit: "pt", format: "a4" });
+
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const ratio = pageWidth / canvas.width;
+    const imgHeight = canvas.height * ratio;
+
+    pdf.addImage(imgData, "PNG", 0, 0, pageWidth, imgHeight);
+    pdf.save("reporte-trabajo.pdf");
   };
 
   const SectionCard = ({ title, children, description }) => (
@@ -63,7 +95,7 @@ export default function Trabajo() {
       )}
       {children}
       {description && (
-        <Typography variant="body2" sx={{ color: 'text.secondary', mt: 2 }}>
+        <Typography variant="body2" sx={{ color: "text.secondary", mt: 2 }}>
           {description}
         </Typography>
       )}
@@ -76,38 +108,40 @@ export default function Trabajo() {
         variant="h4"
         gutterBottom
         sx={{
-          textAlign: 'center',
+          textAlign: "center",
           fontWeight: 700,
-          textTransform: 'uppercase',
-          color: '#fb8c00',
+          textTransform: "uppercase",
+          color: "#fb8c00",
         }}
       >
-        Trabajo
+        TRABAJO
       </Typography>
 
       <Typography
         variant="body1"
         sx={{
-          textAlign: 'center',
-          color: 'text.secondary',
-          maxWidth: 700,
-          mx: 'auto',
+          textAlign: "center",
+          color: "text.secondary",
+          maxWidth: 820,
+          mx: "auto",
           mb: 1,
         }}
       >
-        Estadísticas laborales, tasas de empleo y desempleo, condiciones de trabajo y mercado laboral en Chile.
+        Estadísticas laborales, tasas de empleo y desempleo, condiciones de trabajo y mercado
+        laboral en Chile.
       </Typography>
 
       <Typography
         variant="body2"
         sx={{
-          textAlign: 'center',
-          color: 'text.secondary',
+          textAlign: "center",
+          color: "text.secondary",
           mt: 0,
           mb: 4,
         }}
       >
-        Información basada en datos de la Encuesta Nacional de Empleo (ENE), desde <strong>2018</strong> hasta <strong>2024</strong>.
+        Información basada en datos de la Encuesta Nacional de Empleo (ENE) y ESI, desde{" "}
+        <strong>2018</strong> hasta <strong>2024</strong>.
       </Typography>
 
       <Grid container spacing={3} justifyContent="center" sx={{ mb: 4 }}>
@@ -117,15 +151,15 @@ export default function Trabajo() {
               elevation={2}
               sx={{
                 p: 2,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'flex-start',
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "flex-start",
                 gap: 1,
                 borderRadius: 2,
               }}
             >
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <item.icon sx={{ color: '#fb8c00', fontSize: 24 }} />
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <item.icon sx={{ color: "#fb8c00", fontSize: 24 }} />
                 <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
                   {item.title}
                 </Typography>
@@ -142,45 +176,68 @@ export default function Trabajo() {
       </Grid>
 
       <SectionCard
-        title="Evolución de Fuerza Laboral y Desempleo (Muestra)"
         description="La evolución anual del empleo permite observar el impacto de fenómenos económicos y sociales en la fuerza laboral chilena."
       >
         <GraficoTrabajoPorAnio />
       </SectionCard>
 
       <SectionCard
-        title="Participación laboral por sexo"
         description="Los hombres siguen presentando una tasa de ocupación significativamente mayor."
       >
         <GraficoSexo />
       </SectionCard>
 
       <SectionCard
-        title="Cotización previsional y de salud"
         description="Un porcentaje importante de trabajadores no cotiza regularmente."
       >
         <GraficoCotizaciones />
       </SectionCard>
 
       <SectionCard
-        title="Tipo de Jornada Laboral"
         description="La mayoría declara jornada completa, pero hay una porción considerable en jornada parcial."
       >
         <GraficoJornada />
       </SectionCard>
 
+      {/* === NUEVO: ESI Ingresos (KPIs) === */}
+      <SectionCard description="Ingreso medio (ESI) para el último año disponible, total y por sexo.">
+        <ESIIngresosKPIs />
+      </SectionCard>
+
+      {/* === NUEVO: ESI Ingresos (serie anual) === */}
+      <SectionCard description="Evolución anual del ingreso medio según ESI para total, hombres y mujeres (2018–2024).">
+        <GraficoESIIngresos />
+      </SectionCard>
+
       <SectionCard
-        title="Ingreso Promedio Mensual"
-        description="El ingreso promedio mensual estimado para 2024 ronda los $570.000 pesos chilenos. Este valor refleja una mediana de ingresos entre ocupados y ocupadas mayores de 15 años, considerando distintas ramas de actividad económica, niveles educacionales y tipos de jornada. Si bien representa un leve incremento respecto a años anteriores, aún persisten brechas salariales importantes por género, región y formalidad laboral."
+        description="El ingreso promedio refleja diferencias por género, región, formalidad y tipo de jornada."
       >
         <GraficoIngreso />
       </SectionCard>
 
-      <Box sx={{ textAlign: 'center', mt: 4 }}>
+      <SectionCard
+        description="Promedio anual de ingresos de hombres y mujeres (a partir del dataset enviado)."
+      >
+        <GraficoIngresoSexo />
+      </SectionCard>
+
+      <SectionCard
+        description="TD, TO, TP, TPL y SU1–SU4, junto a TOI y TOSI según ENE."
+      >
+        <GraficoTasas />
+      </SectionCard>
+
+      <SectionCard
+        description="Distribución por edades de PET, FDT, OC, DES, ID, TPI, OBE, FTP, FTA, FFT, OI y OSI."
+      >
+        <GraficoPiramide />
+      </SectionCard>
+
+      <Box sx={{ textAlign: "center", mt: 4 }}>
         <Button
           onClick={exportarPDF}
           variant="contained"
-          sx={{ backgroundColor: '#fb8c00', fontWeight: 600 }}
+          sx={{ backgroundColor: "#fb8c00", fontWeight: 600 }}
         >
           Descargar reporte PDF
         </Button>
