@@ -1,5 +1,5 @@
 // src/components/ESIIngresosKPIs.jsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Grid, Paper, Box, Typography } from "@mui/material";
 import PaidIcon from "@mui/icons-material/Paid";
 import ManIcon from "@mui/icons-material/Man";
@@ -11,9 +11,15 @@ const fmt = (n) =>
 
 export default function ESIIngresosKPIs() {
   const [last, setLast] = useState({ anio: null, total: null, hombres: null, mujeres: null });
+  const fetched = useRef(false);
 
   useEffect(() => {
-    getESIIngresosUltimo().then(setLast);
+    if (fetched.current) return;
+    fetched.current = true;
+
+    let alive = true;
+    getESIIngresosUltimo().then((d) => { if (alive) setLast(d); });
+    return () => { alive = false; };
   }, []);
 
   const items = [
@@ -31,7 +37,7 @@ export default function ESIIngresosKPIs() {
               <item.icon sx={{ color: item.color, fontSize: 24 }} />
               <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>{item.title}</Typography>
             </Box>
-            <Typography variant="h5" sx={{ fontWeight: 700 }}>{item.value}</Typography>
+            <Typography variant="h5" sx={{ fontWeight: 700, lineHeight: 1 }}>{item.value}</Typography>
             <Typography variant="body2" color="text.secondary">{item.subtitle}</Typography>
           </Paper>
         </Grid>

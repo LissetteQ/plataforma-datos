@@ -10,48 +10,59 @@ const Footer = () => {
     <Box
       component="footer"
       sx={{
-        bgcolor: '#A6110F',
+        bgcolor: '#e6e6e6', 
         color: 'white',
         px: 3,
-        py: 2,
+        py: 5,
+        position: 'relative',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
         flexWrap: 'wrap',
+        overflow: 'visible',
       }}
     >
-      {/* Logo + texto */}
+      {/* Logo Nodo + texto */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
         <img
-          src="/img/Logo_NODO_BLANCO.png"
+          src="/img/logoNodo_COLOR.png"
           alt="Logo Nodo XXI Blanco"
           style={{ height: '60px', objectFit: 'contain' }}
         />
-        <Typography variant="body2" sx={{ fontFamily: 'Poppins, sans-serif' }}>
+        <Typography variant="body2" sx={{ fontFamily: 'Poppins, sans-serif', color: 'black' }}>
           Desarrollado por Integratek Chile para Fundación Nodo XXI.
         </Typography>
       </Box>
 
       {/* Iconos sociales */}
       <Box sx={{ display: 'flex', gap: 1 }}>
-        <IconButton color="inherit" href="https://www.facebook.com" target="_blank">
+        <IconButton color="black" href="https://www.facebook.com" target="_blank">
           <FacebookIcon />
         </IconButton>
-        <IconButton color="inherit" href="https://www.twitter.com" target="_blank">
+        <IconButton color="black" href="https://www.twitter.com" target="_blank">
           <TwitterIcon />
         </IconButton>
-        <IconButton color="inherit" href="https://www.instagram.com" target="_blank">
+        <IconButton color="black" href="https://www.instagram.com" target="_blank">
           <InstagramIcon />
         </IconButton>
-        <IconButton color="inherit" href="#" target="_blank">
+        <IconButton color="black" href="#" target="_blank">
           <RssFeedIcon />
         </IconButton>
       </Box>
-      <Box>
+
+      {/* Logo FES mucho más arriba */}
+      <Box
+        sx={{
+          position: 'absolute',
+          top: '-70px',   // mucho más arriba (ajusta a -80px o -100px si quieres)
+          right: '40px',  // separado del borde derecho
+          lineHeight: 0,
+        }}
+      >
         <img
-          src="/img/FES-Logo_Standard_Rot_Bildschirm (1).png"
-          alt="Logo Fundación Nodo XXI Blanco"
-          style={{ height: '60px', objectFit: 'contain' }}
+          src="/img/FES-Logo_Standard_Rot_Bildschirm.png"
+          alt="Logo FES"
+          style={{ height: '100px', objectFit: 'contain', display: 'block' }}
         />
       </Box>
     </Box>

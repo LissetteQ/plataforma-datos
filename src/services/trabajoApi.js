@@ -7,13 +7,16 @@ const API_BASE =
 
 const api = axios.create({ baseURL: API_BASE, timeout: 15000 });
 
-const safe = async (fn) => {
-  try { return await fn(); }
-  catch (err) {
+const safe = async (fn, fallback = []) => {
+  try {
+    return await fn();
+  } catch (err) {
     console.error("[trabajoApi] Error:", err?.message || err);
-    return { rows: [] };
+    return fallback;
   }
 };
+
+/* ===== Datos ENE ===== */
 
 export const getAnual = async () =>
   safe(async () => {
@@ -42,7 +45,9 @@ export const getPiramide = async (params = {}) =>
 export const getSerieBC = async ({ serieId, startDate = "", endDate = "" }) =>
   safe(async () => {
     const { data } = await api.post("/banco-central/serie", {
-      serieId, startDate, endDate,
+      serieId,
+      startDate,
+      endDate,
     });
     return data;
   });
@@ -58,32 +63,37 @@ const seriesFromDataset = (ds = []) => {
     if (!acc.has(a)) acc.set(a, { Hombres: { s: 0, c: 0 }, Mujeres: { s: 0, c: 0 } });
     const slot = acc.get(a)[key];
     const v = Number(r.ingreso_promedio ?? 0);
-    if (Number.isFinite(v)) { slot.s += v; slot.c += 1; }
+    if (Number.isFinite(v)) {
+      slot.s += v;
+      slot.c += 1;
+    }
   });
-  return Array.from(acc.entries()).map(([anio, g]) => {
-    const hombres = g.Hombres.c ? Math.round(g.Hombres.s / g.Hombres.c) : null;
-    const mujeres = g.Mujeres.c ? Math.round(g.Mujeres.s / g.Mujeres.c) : null;
-    const total = (hombres != null && mujeres != null)
-      ? Math.round((hombres + mujeres) / 2)
-      : (hombres ?? mujeres ?? null);
-    return { anio, total, hombres, mujeres };
-  }).sort((a, b) => a.anio - b.anio);
+  return Array.from(acc.entries())
+    .map(([anio, g]) => {
+      const hombres = g.Hombres.c ? Math.round(g.Hombres.s / g.Hombres.c) : null;
+      const mujeres = g.Mujeres.c ? Math.round(g.Mujeres.s / g.Mujeres.c) : null;
+      const total =
+        hombres != null && mujeres != null
+          ? Math.round((hombres + mujeres) / 2)
+          : hombres ?? mujeres ?? null;
+      return { anio, total, hombres, mujeres };
+    })
+    .sort((a, b) => a.anio - b.anio);
 };
 
-export const getESIIngresos = async (params = {}) =>
-  safe(async () => {
-    // 1) Intento principal
-    try {
-      const { data } = await api.get("/trabajo/esi/ingresos", { params });
-      const rows = Array.isArray(data) ? data : (data?.rows ?? []);
-      if (Array.isArray(rows) && rows.length) return rows;
-    } catch (e) {
-      console.warn("[getESIIngresos] endpoint ESI falló, usando fallback dataset");
-    }
-    // 2) Fallback: construir desde dataset del backend
-    const ds = await getDataset();
-    return seriesFromDataset(ds);
-  });
+export const getESIIngresos = async (params = {}) => {
+  // 1) Endpoint backend
+  try {
+    const { data } = await api.get("/trabajo/esi/ingresos", { params });
+    const rows = Array.isArray(data) ? data : data?.rows ?? [];
+    if (rows.length) return rows;
+  } catch (e) {
+    console.warn("[getESIIngresos] Endpoint no disponible, usando fallback dataset.");
+  }
+  // 2) Fallback (dataset ya existente)
+  const ds = await getDataset();
+  return seriesFromDataset(ds);
+};
 
 export const getESIIngresosUltimo = async () => {
   const rows = await getESIIngresos();
@@ -92,3 +102,15 @@ export const getESIIngresosUltimo = async () => {
   }
   return rows.reduce((a, b) => (a.anio > b.anio ? a : b));
 };
+
+// (opcional) export default con todo junto
+export default {
+  getAnual,
+  getDataset,
+  getTasas,
+  getPiramide,
+  getSerieBC,
+  getESIIngresos,
+  getESIIngresosUltimo,
+};
+  

@@ -4,13 +4,14 @@ const express = require("express");
 const axios = require("axios");
 const cors = require("cors");
 
-// Servicios (datos mock + ESI desde CSV/fallback)
+// ===== Servicios de Trabajo (lee CSV reales, sin mocks)
 const {
   getAnual,
   getDataset,
   getTasas,
   getPiramide,
   getESIIngresos,
+  getMeta, // <- opcional: para /api/trabajo/meta
 } = require("./services/trabajoService");
 
 const app = express();
@@ -24,7 +25,9 @@ app.get("/api/health", (_req, res) => {
   res.json({ status: "ok", time: new Date().toISOString() });
 });
 
-// ----------------------- Banco Central (original + alias) -----------------------
+// ===================================================================
+// ==============   BANCO CENTRAL (NO TOCAR)   =======================
+// ===================================================================
 app.post("/api/banco-central/obtenerSerie", async (req, res) => {
   const { USER_BC, PASS_BC } = process.env;
   const { serieId, startDate, endDate } = req.body;
@@ -55,10 +58,14 @@ app.post("/api/banco-central/serie", async (req, res) => {
   }
 });
 
-// ----------------------- Trabajo -----------------------
+// ===================================================================
+// =======================   TRABAJO   ================================
+// ===================================================================
+
+// Anual (2018–2024): { rows: [...] }
 app.get("/api/trabajo/anual", async (_req, res) => {
   try {
-    const data = await getAnual(); // -> { rows: [...] }
+    const data = await getAnual();
     res.json(data);
   } catch (e) {
     console.error("❌ /trabajo/anual:", e);
@@ -66,9 +73,10 @@ app.get("/api/trabajo/anual", async (_req, res) => {
   }
 });
 
-app.get("/api/trabajo/dataset", async (_req, res) => {
+// Dataset ENE completo (permite filtros por query si los envías)
+app.get("/api/trabajo/dataset", async (req, res) => {
   try {
-    const data = await getDataset();
+    const data = await getDataset(req.query); // ← **corrección**: pasar filtros si vienen
     res.json(data);
   } catch (e) {
     console.error("❌ /trabajo/dataset:", e);
@@ -76,6 +84,7 @@ app.get("/api/trabajo/dataset", async (_req, res) => {
   }
 });
 
+// Tasas ENE (TD, TO, TP, TPL, SU1–SU4, TOI, TOSI)
 app.get("/api/trabajo/tasas", async (req, res) => {
   try {
     const { periodo, sexo } = req.query;
@@ -87,6 +96,7 @@ app.get("/api/trabajo/tasas", async (req, res) => {
   }
 });
 
+// Pirámide PET/FDT/OC/... (por periodo, ej: 2024T2)
 app.get("/api/trabajo/piramide", async (req, res) => {
   try {
     const { periodo } = req.query;
@@ -98,8 +108,7 @@ app.get("/api/trabajo/piramide", async (req, res) => {
   }
 });
 
-// ----------------------- NUEVO: ESI Ingresos -----------------------
-// Devuelve { rows: [{ anio, total, hombres, mujeres }, ...] }
+// ESI Ingresos (array en {rows}: [{ anio, total, hombres, mujeres }])
 app.get("/api/trabajo/esi/ingresos", async (req, res) => {
   try {
     const { anioDesde, anioHasta } = req.query;
@@ -111,6 +120,17 @@ app.get("/api/trabajo/esi/ingresos", async (req, res) => {
   } catch (e) {
     console.error("❌ /trabajo/esi/ingresos:", e);
     res.status(500).json({ error: "No se pudo obtener ESI ingresos" });
+  }
+});
+
+// (Opcional) Meta: cuenta filas y muestra años min/max por archivo CSV
+app.get("/api/trabajo/meta", async (_req, res) => {
+  try {
+    const meta = await getMeta();
+    res.json({ ok: true, meta });
+  } catch (e) {
+    console.error("❌ /trabajo/meta:", e);
+    res.status(500).json({ ok: false, error: "No se pudo leer meta" });
   }
 });
 

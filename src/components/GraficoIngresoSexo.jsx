@@ -1,64 +1,175 @@
 // src/components/GraficoIngresoSexo.jsx
 import React, { useEffect, useMemo, useState } from "react";
-import {
-  ResponsiveContainer,
-  BarChart,
-  CartesianGrid,
-  XAxis,
-  YAxis,
-  Tooltip,
-  Legend,
-  Bar,
-} from "recharts";
-import { Box, Typography } from "@mui/material";
+import { Box, Typography, useMediaQuery, useTheme } from "@mui/material";
+import { BarChart } from "@mui/x-charts/BarChart";
 import { getDataset } from "../services/trabajoApi";
+
+/* Colores corporativos
+   - Nodo XXI (azul profundo): #0B3D91
+   - FES Chile (rojo):         #D70000
+*/
+const COL_HOMBRES = "#0B3D91";
+const COL_MUJERES = "#D70000";
+const STROKE = "rgba(0,0,0,0.14)";
+
+// CLP para tooltip (completo)
+const fmtCLP = (v) =>
+  v == null ? "—" : `$${Number(v).toLocaleString("es-CL", { maximumFractionDigits: 0 })}`;
+
+// CLP compacto para eje Y (k / M)
+const fmtCLPCompact = (v) => {
+  if (v == null) return "—";
+  const n = Number(v);
+  if (Math.abs(n) >= 1_000_000) return `$${(n / 1_000_000).toFixed(1)}M`;
+  return `$${Math.round(n / 1_000)}k`;
+};
 
 export default function GraficoIngresoSexo() {
   const [rows, setRows] = useState([]);
+
+  const theme = useTheme();
+  const isXs = useMediaQuery(theme.breakpoints.down("sm"));
+  const isMdUp = useMediaQuery(theme.breakpoints.up("md"));
 
   useEffect(() => {
     getDataset().then((r) => setRows(Array.isArray(r) ? r : []));
   }, []);
 
-  const data = useMemo(() => {
-    // promedio por año y sexo
-    const map = new Map(); // anio -> { Hombre:{sum,n}, Mujer:{sum,n} }
+  // Construimos promedios por año y sexo desde el dataset
+  const { xLabels, serieH, serieM, ultimo } = useMemo(() => {
+    // anio -> { Hombre:{s,c}, Mujer:{s,c} }
+    const acc = new Map();
     for (const r of rows) {
-      const a = r.anio;
-      const s = r.sexo;
-      const v = Number(r.ingreso_promedio ?? 0);
-      if (!map.has(a)) map.set(a, { Hombre: { sum: 0, n: 0 }, Mujer: { sum: 0, n: 0 } });
-      const g = map.get(a)[s];
-      if (g) { g.sum += v; g.n += 1; }
+      const anio = Number(r.anio);
+      const sexo = String(r.sexo || "").trim();
+      const v = Number(r.ingreso_promedio ?? NaN);
+      if (!Number.isFinite(anio) || !Number.isFinite(v)) continue;
+      if (sexo !== "Hombre" && sexo !== "Mujer") continue;
+
+      if (!acc.has(anio)) acc.set(anio, { Hombre: { s: 0, c: 0 }, Mujer: { s: 0, c: 0 } });
+      const slot = acc.get(anio)[sexo];
+      slot.s += v;
+      slot.c += 1;
     }
-    const out = [];
-    for (const [anio, g] of map.entries()) {
-      out.push({
-        anio,
-        Hombre: Math.round(g.Hombre.sum / Math.max(g.Hombre.n, 1)),
-        Mujer: Math.round(g.Mujer.sum / Math.max(g.Mujer.n, 1)),
-      });
+
+    const years = Array.from(acc.keys()).sort((a, b) => a - b);
+    const hombres = years.map((y) => {
+      const g = acc.get(y).Hombre;
+      return g.c ? Math.round(g.s / g.c) : null;
+    });
+    const mujeres = years.map((y) => {
+      const g = acc.get(y).Mujer;
+      return g.c ? Math.round(g.s / g.c) : null;
+    });
+
+    // último año con ambas cifras para la lectura
+    let ult = null;
+    for (let i = years.length - 1; i >= 0; i--) {
+      const h = hombres[i], m = mujeres[i];
+      if (h != null && m != null) {
+        const brecha = h - m;
+        const pct = m > 0 ? (brecha / m) * 100 : 0;
+        ult = { anio: years[i], h, m, brecha, pct };
+        break;
+      }
     }
-    out.sort((x, y) => x.anio - y.anio);
-    return out;
+
+    return { xLabels: years.map(String), serieH: hombres, serieM: mujeres, ultimo: ult };
   }, [rows]);
+
+  if (!rows.length) {
+    return (
+      <Box sx={{ mt: 2, textAlign: "center" }}>
+        <Typography variant="body2">Cargando…</Typography>
+      </Box>
+    );
+  }
+
+  const height = isXs ? 300 : isMdUp ? 380 : 340;
+  const labelFont = isXs ? 11 : 12;
 
   return (
     <Box sx={{ width: "100%" }}>
-      <Typography variant="h6" sx={{ fontWeight: 700, textAlign: "center", mb: 1 }}>
+      <Typography
+        variant={isXs ? "subtitle1" : "h6"}
+        sx={{ fontWeight: 800, textAlign: "center", mb: { xs: 1, md: 1.25 }, color: "#1F2937" }}
+      >
         Ingreso promedio por sexo (promedio anual)
       </Typography>
-      <ResponsiveContainer width="100%" height={360}>
-        <BarChart data={data} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="anio" />
-          <YAxis tickFormatter={(v) => v.toLocaleString("es-CL")} />
-          <Tooltip formatter={(v) => `$${Number(v).toLocaleString("es-CL")}`} />
-          <Legend />
-          <Bar dataKey="Hombre" name="Hombres" radius={[6, 6, 0, 0]} />
-          <Bar dataKey="Mujer" name="Mujeres" radius={[6, 6, 0, 0]} />
-        </BarChart>
-      </ResponsiveContainer>
+
+      <BarChart
+        height={height}
+        xAxis={[
+          {
+            data: xLabels,
+            scaleType: "band",
+            tickLabelStyle: { fontSize: labelFont },
+          },
+        ]}
+        yAxis={[
+          {
+            tickNumber: isXs ? 4 : 6,
+            valueFormatter: (v) => fmtCLPCompact(v),
+            tickLabelStyle: { fontSize: labelFont },
+          },
+        ]}
+        grid={{ horizontal: true, vertical: false }}
+        margin={{
+          top: isXs ? 8 : 12,
+          right: isXs ? 10 : 14,
+          bottom: isXs ? 42 : 46,
+          left: isXs ? 64 : 78,
+        }}
+        series={[
+          {
+            id: "hombres",
+            label: "Hombres",
+            data: serieH,
+            color: COL_HOMBRES,
+            valueFormatter: (v) => fmtCLP(v),
+          },
+          {
+            id: "mujeres",
+            label: "Mujeres",
+            data: serieM,
+            color: COL_MUJERES,
+            valueFormatter: (v) => fmtCLP(v),
+          },
+        ]}
+        barCategoryGapRatio={isXs ? 0.35 : 0.28}
+        barGapRatio={isXs ? 0.18 : 0.14}
+        sx={{
+          ".MuiBarElement-root": { rx: 8, stroke: STROKE, strokeWidth: 1 },
+          "& .MuiChartsTooltip-paper": { p: isXs ? 0.75 : 1 },
+        }}
+        slotProps={{
+          legend: {
+            direction: "row",
+            position: { vertical: "bottom", horizontal: "middle" },
+            labelStyle: { fontSize: labelFont, fontWeight: 600 },
+          },
+          tooltip: { trigger: "item", valueFormatter: (v) => fmtCLP(v) },
+        }}
+      />
+
+      {ultimo && (
+        <Typography
+          variant="body2"
+          sx={{
+            mt: 1.5,
+            color: "text.secondary",
+            textAlign: "center",
+            maxWidth: 980,
+            mx: "auto",
+            px: { xs: 2, md: 0 },
+            lineHeight: 1.45,
+          }}
+        >
+          En <b>{ultimo.anio}</b>, el ingreso promedio fue <b>{fmtCLP(ultimo.h)}</b> en hombres y{" "}
+          <b>{fmtCLP(ultimo.m)}</b> en mujeres; la brecha alcanzó <b>{fmtCLP(ultimo.brecha)}</b>{" "}
+         
+        </Typography>
+      )}
     </Box>
   );
 }

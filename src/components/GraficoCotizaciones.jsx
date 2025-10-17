@@ -1,59 +1,133 @@
 // src/components/GraficoCotizaciones.jsx
-import React, { useEffect, useMemo, useState } from "react";
-import {
-  ResponsiveContainer,
-  BarChart,
-  CartesianGrid,
-  XAxis,
-  YAxis,
-  Tooltip,
-  Legend,
-  Bar,
-} from "recharts";
-import { getDataset } from "../services/trabajoApi";
+import * as React from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Box, Typography } from "@mui/material";
+import { BarChart } from "@mui/x-charts/BarChart";
+import { getDataset } from "../services/trabajoApi";
+
+// Colores institucionales
+const COLORS = {
+  cotiza: "#005597", 
+  noCotiza: "#5BC1D1", 
+};
+
+// Helper: cuenta válidos (0/1), cotiza=1, noCotiza=0
+function buildMetric(rows, field) {
+  let valid = 0, si = 0;
+  for (const r of rows) {
+    const v = Number(r?.[field]);
+    if (v === 0 || v === 1) {
+      valid += 1;
+      if (v === 1) si += 1;
+    }
+  }
+  const total = rows.length;
+  const pct = (n, d) => (d ? (n / d) * 100 : 0);
+  const pSi = pct(si, total);
+  const pNo = 100 - pSi;
+  return {
+    total,
+    valid,
+    missing: total - valid,
+    siCount: si,
+    noCount: valid - si,
+    pSi: Math.round(pSi),
+    pNo: Math.round(pNo),
+  };
+}
 
 export default function GraficoCotizaciones() {
   const [rows, setRows] = useState([]);
 
   useEffect(() => {
-    getDataset().then((r) => setRows(r ?? []));
+    getDataset().then((r) => setRows(Array.isArray(r) ? r : []));
   }, []);
 
-  const data = useMemo(() => {
-    const total = rows.length || 1;
-    const ambos = rows.filter((d) => d.cotiza_prevision === 1 && d.cotiza_salud === 1).length;
-    const una = rows.filter(
-      (d) =>
-        (d.cotiza_prevision === 1 && d.cotiza_salud === 0) ||
-        (d.cotiza_prevision === 0 && d.cotiza_salud === 1)
-    ).length;
-    const ninguna = rows.filter(
-      (d) => d.cotiza_prevision === 0 && d.cotiza_salud === 0
-    ).length;
-
-    return [
-      { categoria: "Cotiza ambas", porcentaje: Math.round((ambos / total) * 100) },
-      { categoria: "Sólo una cotización", porcentaje: Math.round((una / total) * 100) },
-      { categoria: "No cotiza", porcentaje: Math.round((ninguna / total) * 100) },
-    ];
+  const model = useMemo(() => {
+    const prev = buildMetric(rows, "cotiza_prevision");
+    const salud = buildMetric(rows, "cotiza_salud");
+    return {
+      xData: ["Previsión", "Salud"],
+      cotiza: [prev.pSi, salud.pSi],
+      noCotiza: [prev.pNo, salud.pNo],
+      total: rows.length,
+      detail: { prev, salud },
+    };
   }, [rows]);
 
+  if (!rows.length) {
+    return (
+      <Box sx={{ width: "100%", minHeight: 200, display: "grid", placeItems: "center" }}>
+        <Typography variant="body2" color="text.secondary">
+          No hay datos disponibles para mostrar cotizaciones.
+        </Typography>
+      </Box>
+    );
+  }
+
+  const fmtPct = (v) => `${v ?? 0}%`;
+
   return (
-    <Box sx={{ width: "100%", height: 360 }}>
-      <Typography variant="h6" sx={{ fontWeight: 700, textAlign: "center", mb: 2 }}>
+    <Box sx={{ width: "100%" }}>
+      <Typography variant="h6" sx={{ fontWeight: 700, textAlign: "center", mb: 1.5 }}>
         Cotización previsional y de salud
       </Typography>
-      <ResponsiveContainer>
-        <BarChart data={data} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="categoria" />
-          <YAxis domain={[0, 100]} tickFormatter={(v) => `${v}%`} />
-          <Tooltip formatter={(v) => `${v}%`} />
-          <Legend />
-          <Bar dataKey="porcentaje" name="Porcentaje" radius={[6, 6, 0, 0]} />
-        </BarChart>
-      </ResponsiveContainer>
+
+      <BarChart
+        height={300}
+        xAxis={[{
+          data: model.xData,
+          scaleType: "band",
+          tickPlacement: "middle",
+          paddingInner: 0.2,
+          paddingOuter: 0.1,
+          tickLabelStyle: { fontSize: 12 },
+        }]}
+        yAxis={[{ width: 56, label: "Porcentaje", min: 0, max: 100 }]}
+        series={[
+          {
+            data: model.cotiza,
+            label: "Cotiza",
+            color: COLORS.cotiza,
+            barMaxWidth: 22,
+            valueFormatter: fmtPct,
+          },
+          {
+            data: model.noCotiza,
+            label: () => "No cotiza",
+            color: COLORS.noCotiza,
+            barMaxWidth: 22,
+            valueFormatter: fmtPct,
+          },
+        ]}
+        margin={{ top: 20, right: 16, bottom: 42, left: 64 }}
+        sx={{
+          "--Charts-gridLineDash": "3 3",
+          ".MuiChartsGrid-line": { stroke: COLORS.noCotiza, opacity: 0.25 },
+          ".MuiBarElement-root": { rx: 6, ry: 6 },
+          ".MuiChartsAxis-bottom .MuiChartsAxis-tickLabel": { transform: "translateY(4px)" },
+        }}
+      />
+
+      <Typography
+        variant="caption"
+        sx={{ display: "block", textAlign: "center", mt: 1, color: "text.secondary" }}
+      >
+        Total de registros: {model.total.toLocaleString("es-CL")}
+      </Typography>
+
+      {/* Línea de verificación con conteos y válidos por categoría */}
+      <Typography
+        variant="caption"
+        sx={{ display: "block", textAlign: "center", mt: 0.5, color: "text.secondary" }}
+      >
+        Previsión: {model.detail.prev.siCount}/{model.detail.prev.total} cotiza ({fmtPct(model.detail.prev.pSi)}),{" "}
+        {model.detail.prev.total - model.detail.prev.siCount}/{model.detail.prev.total} no cotiza ({fmtPct(model.detail.prev.pNo)})
+        {model.detail.prev.missing ? ` — faltantes: ${model.detail.prev.missing}` : ""}.&nbsp;
+        Salud: {model.detail.salud.siCount}/{model.detail.salud.total} cotiza ({fmtPct(model.detail.salud.pSi)}),{" "}
+        {model.detail.salud.total - model.detail.salud.siCount}/{model.detail.salud.total} no cotiza ({fmtPct(model.detail.salud.pNo)})
+        {model.detail.salud.missing ? ` — faltantes: ${model.detail.salud.missing}` : ""}.
+      </Typography>
     </Box>
   );
 }

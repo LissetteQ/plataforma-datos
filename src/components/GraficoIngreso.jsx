@@ -1,87 +1,166 @@
 // src/components/GraficoIngreso.jsx
-import React, { useEffect, useMemo, useState } from "react";
-import {
-  ResponsiveContainer,
-  BarChart,
-  CartesianGrid,
-  XAxis,
-  YAxis,
-  Tooltip,
-  Legend,
-  Bar,
-} from "recharts";
-import { Box, Typography } from "@mui/material";
-import { getDataset } from "../services/trabajoApi";
+import React, { useEffect, useRef, useState } from "react";
+import { Box, Paper, Typography } from "@mui/material";
+import { useTheme, useMediaQuery } from "@mui/material";
+import { LineChart } from "@mui/x-charts/LineChart";
+import { getESIIngresos } from "../services/trabajoApi";
 
-const fmtCLP = (n) => `$${(n ?? 0).toLocaleString("es-CL")}`;
+// Paleta coherente con FES/Nodo XXI
+const COL_HOMBRES = "#1565c0"; // azul
+const COL_MUJERES = "#c2185b"; // magenta
 
-function groupAvg(arr, key) {
-  const map = new Map();
-  for (const r of arr) {
-    const k = r[key];
-    if (k == null) continue;
-    const v = Number(r.ingreso_promedio ?? 0);
-    const acc = map.get(k) || { sum: 0, n: 0 };
-    acc.sum += v;
-    acc.n += 1;
-    map.set(k, acc);
-  }
-  const out = [];
-  for (const [k, { sum, n }] of map.entries()) {
-    out.push({ k, ingreso: Math.round(sum / Math.max(n, 1)) });
-  }
-  // ordenar numéricamente (mes o año)
-  out.sort((a, b) => Number(a.k) - Number(b.k));
-  return out;
-}
-
-const monthName = (m) =>
-  ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"][m - 1] ||
-  String(m);
+const fmtCLP = (v) =>
+  v == null
+    ? "—"
+    : `$${Number(v).toLocaleString("es-CL", { maximumFractionDigits: 0 })}`;
 
 export default function GraficoIngreso() {
   const [rows, setRows] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const fetched = useRef(false);
+
+  const theme = useTheme();
+  const isXs = useMediaQuery(theme.breakpoints.down("sm"));
+  const isMdUp = useMediaQuery(theme.breakpoints.up("md"));
 
   useEffect(() => {
-    getDataset().then((r) => setRows(Array.isArray(r) ? r : []));
+    if (fetched.current) return;
+    fetched.current = true;
+
+    let alive = true;
+    (async () => {
+      try {
+        // Trae ESI (2018–2024 por sexo). Si el endpoint no está, hace fallback automático.
+        const data = await getESIIngresos();
+        if (!alive) return;
+
+        const clean = (Array.isArray(data) ? data : [])
+          .map((r) => ({
+            anio: Number(r.anio),
+            hombres: r.hombres ?? null,
+            mujeres: r.mujeres ?? null,
+          }))
+          .filter((r) => Number.isFinite(r.anio))
+          .sort((a, b) => a.anio - b.anio);
+
+        setRows(clean);
+      } catch (e) {
+        console.error("Error cargando ESI ingresos:", e);
+        setRows([]);
+      } finally {
+        setLoading(false);
+      }
+    })();
+
+    return () => {
+      alive = false;
+    };
   }, []);
 
-  const chart = useMemo(() => {
-    // ¿hay meses? si sí, graficamos el último año con meses
-    const tieneMes = rows.some((r) => Number(r.mes) > 0);
-    if (tieneMes) {
-      const yearsWithMonth = [...new Set(rows.filter((r) => r.mes).map((r) => r.anio))];
-      const year = Math.max(...yearsWithMonth);
-      const byMonth = groupAvg(rows.filter((r) => r.anio === year), "mes").map((d) => ({
-        etiqueta: monthName(Number(d.k)),
-        ingreso: d.ingreso,
-      }));
-      return { titulo: `Ingreso Promedio Mensual (${year})`, data: byMonth };
-    }
-    // si no hay meses, agrupamos por año
-    const byYear = groupAvg(rows, "anio").map((d) => ({
-      etiqueta: String(d.k),
-      ingreso: d.ingreso,
-    }));
-    return { titulo: "Ingreso Promedio Anual", data: byYear };
-  }, [rows]);
+  if (loading) {
+    return (
+      <Box sx={{ mt: 1.5, textAlign: "center" }}>
+        <Typography variant="body2">Cargando…</Typography>
+      </Box>
+    );
+  }
+
+  if (!rows.length) {
+    return (
+      <Box sx={{ mt: 1.5, textAlign: "center" }}>
+        <Typography variant="body2">No hay datos para mostrar.</Typography>
+      </Box>
+    );
+  }
+
+  const x = rows.map((r) => String(r.anio));
+  const serieH = rows.map((r) => r.hombres ?? null);
+  const serieM = rows.map((r) => r.mujeres ?? null);
+
+  const chartHeight = isXs ? 260 : isMdUp ? 360 : 310;
 
   return (
-    <Box sx={{ mt: 3 }}>
-      <Typography variant="h6" sx={{ fontWeight: 700, textAlign: "center", mb: 2 }}>
-        {chart.titulo}
+    <Paper
+      elevation={0}
+      sx={{
+        p: 0,
+        boxShadow: "none",
+        bgcolor: "transparent",
+      }}
+    >
+      {/* TÍTULO CENTRADO */}
+      <Typography
+        variant={isXs ? "subtitle1" : "h6"}
+        sx={{
+          fontWeight: 800,
+          textAlign: "center",
+          mb: { xs: 1, sm: 1.25 },
+          color: "#1F2937",
+          letterSpacing: 0.2,
+        }}
+      >
+        Ingreso promedio por sexo (2018–2024)
       </Typography>
 
-      <ResponsiveContainer width="100%" height={360}>
-        <BarChart data={chart.data} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="etiqueta" />
-          <YAxis tickFormatter={(v) => v.toLocaleString("es-CL")} />
-          <Tooltip formatter={(v) => fmtCLP(v)} />
-          <Legend />
-          <Bar dataKey="ingreso" name="Ingreso promedio" radius={[6, 6, 0, 0]} />
-        </BarChart>
-      </ResponsiveContainer>
-    </Box>
+      <Box sx={{ width: "100%" }}>
+        <LineChart
+          height={chartHeight}
+          xAxis={[
+            {
+              data: x,
+              scaleType: "point",
+              tickLabelStyle: { fontSize: isXs ? 10 : 12 },
+            },
+          ]}
+          yAxis={[
+            {
+              valueFormatter: (v) =>
+                v == null ? "" : `$${Math.round(v).toLocaleString("es-CL")}`,
+              tickLabelStyle: { fontSize: isXs ? 10 : 12 },
+            },
+          ]}
+          series={[
+            {
+              id: "hombres",
+              label: "Hombres",
+              data: serieH,
+              color: COL_HOMBRES,
+              showMark: true,
+              curve: "monotoneX",
+              valueFormatter: (v) => fmtCLP(v),
+            },
+            {
+              id: "mujeres",
+              label: "Mujeres",
+              data: serieM,
+              color: COL_MUJERES,
+              showMark: true,
+              curve: "monotoneX",
+              valueFormatter: (v) => fmtCLP(v),
+            },
+          ]}
+          margin={{
+            top: isXs ? 6 : 10,
+            right: isXs ? 12 : 18,
+            bottom: isXs ? 26 : 34,
+            left: isXs ? 54 : 80,
+          }}
+          grid={{ horizontal: true, vertical: false }}
+          slotProps={{
+            legend: {
+              position: { vertical: "bottom", horizontal: "middle" },
+              direction: "row",
+            },
+          }}
+          sx={{
+            "& .MuiChartsAxis-left .MuiChartsAxis-tickLabel": { fontSize: 12 },
+            "& .MuiChartsAxis-bottom .MuiChartsAxis-tickLabel": { fontSize: 12 },
+            "& .MuiChartsTooltip-root .MuiChartsTooltip-paper": {
+              p: isXs ? 0.75 : 1,
+            },
+          }}
+        />
+      </Box>
+    </Paper>
   );
 }
