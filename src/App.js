@@ -4,9 +4,8 @@ import { ThemeProvider, createTheme, CssBaseline, Box } from '@mui/material';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Home from './pages/Home';
-import Pensiones from './pages/Pensiones';
 import Mapa from './pages/Mapa';
-import Pobreza from './pages/Pobreza';
+import Educacion from './pages/Educacion';
 import Macroeconomia from './pages/Macroeconomia';
 import Salud from './pages/Salud';
 import Trabajo from './pages/Trabajo';
@@ -42,9 +41,8 @@ export default function App() {
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/explorar-datos" element={<ExplorarDatos />} />
-              <Route path="/pensiones" element={<Pensiones />} />
               <Route path="/mapa" element={<Mapa />} />
-              <Route path="/pobreza" element={<Pobreza />} />
+              <Route path="/educacion" element={<Educacion />} />
               <Route path="/macroeconomia" element={<Macroeconomia />} />
               <Route path="/salud" element={<Salud />} />
               <Route path="/trabajo" element={<Trabajo />} />

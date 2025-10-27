@@ -27,7 +27,6 @@ import WomanIcon from "@mui/icons-material/Woman";
 import GraficoTrabajoPorAnio from "../components/GraficoTrabajoPorAnio";
 import GraficoSexo from "../components/GraficoSexo";
 import GraficoCotizaciones from "../components/GraficoCotizaciones";
-import GraficoIngreso from "../components/GraficoIngreso"; // <- si deseas, puedes borrar esta línea
 import GraficoJornada from "../components/GraficoJornada";
 import GraficoTasas from "../components/GraficoTasas";
 import GraficoPiramide from "../components/GraficoPiramide";

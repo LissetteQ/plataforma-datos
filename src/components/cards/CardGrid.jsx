@@ -10,19 +10,13 @@ const cards = [
     image: '/img/Macroeconomia.jpg',
     route: '/macroeconomia', 
   },
-  {
-    id: 2,
-    title: 'Pensiones',
-    description: 'Información clave del sistema de pensiones.',
-    image: '/img/Pensiones.jpg',
-    route: '/pensiones',
-  },
+
   {
     id: 3,
-    title: 'Pobreza',
-    description: 'Indicadores y datos sobre pobreza en Chile.',
-    image: '/img/Pobreza.jpg',
-    route: '/pobreza',
+    title: 'Educación',
+    description: 'Indicadores y datos sobre educación en Chile.',
+    image: '/img/Educacion.jpg',
+    route: '/educacion',
   },
   {
     id: 4,

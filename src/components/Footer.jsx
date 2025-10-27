@@ -20,6 +20,7 @@ const Footer = () => {
         alignItems: 'center',
         flexWrap: 'wrap',
         overflow: 'visible',
+        marginTop: '100px',
       }}
     >
       {/* Logo Nodo + texto */}
@@ -54,8 +55,8 @@ const Footer = () => {
       <Box
         sx={{
           position: 'absolute',
-          top: '-70px',   // mucho más arriba (ajusta a -80px o -100px si quieres)
-          right: '40px',  // separado del borde derecho
+          top: '-70px',
+          right: '40px', 
           lineHeight: 0,
         }}
       >

@@ -4,16 +4,23 @@ const express = require("express");
 const axios = require("axios");
 const cors = require("cors");
 
-// ===== Servicios de Trabajo (lee CSV reales, sin mocks)
+// ===== Servicios de Educación (lee CSV consolidados) =====
+const educacion = require("./services/educacionService");
+
+// ===== Servicios de Trabajo =====
 const {
   getAnual,
   getDataset,
   getTasas,
   getPiramide,
   getESIIngresos,
-  getMeta, // <- opcional: para /api/trabajo/meta
+  getMeta,
 } = require("./services/trabajoService");
 
+// ===== Servicios de Salud =====
+const salud = require("./services/saludService");
+
+// ===== APP / PORT =====
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -39,7 +46,9 @@ app.post("/api/banco-central/obtenerSerie", async (req, res) => {
     res.json(response.data);
   } catch (error) {
     console.error("❌ Error al obtener datos:", error.message);
-    res.status(500).json({ error: "No se pudo obtener datos del Banco Central" });
+    res
+      .status(500)
+      .json({ error: "No se pudo obtener datos del Banco Central" });
   }
 });
 
@@ -54,7 +63,11 @@ app.post("/api/banco-central/serie", async (req, res) => {
     res.json(response.data);
   } catch (error) {
     console.error("❌ Error al obtener datos (alias /serie):", error.message);
-    res.status(500).json({ error: "No se pudo obtener datos del Banco Central (alias /serie)" });
+    res
+      .status(500)
+      .json({
+        error: "No se pudo obtener datos del Banco Central (alias /serie)",
+      });
   }
 });
 
@@ -69,18 +82,22 @@ app.get("/api/trabajo/anual", async (_req, res) => {
     res.json(data);
   } catch (e) {
     console.error("❌ /trabajo/anual:", e);
-    res.status(500).json({ error: "No se pudo obtener los datos anuales de trabajo" });
+    res
+      .status(500)
+      .json({ error: "No se pudo obtener los datos anuales de trabajo" });
   }
 });
 
 // Dataset ENE completo (permite filtros por query si los envías)
 app.get("/api/trabajo/dataset", async (req, res) => {
   try {
-    const data = await getDataset(req.query); // ← **corrección**: pasar filtros si vienen
+    const data = await getDataset(req.query); // ← pasa filtros si vienen
     res.json(data);
   } catch (e) {
     console.error("❌ /trabajo/dataset:", e);
-    res.status(500).json({ error: "No se pudo obtener el dataset de trabajo" });
+    res
+      .status(500)
+      .json({ error: "No se pudo obtener el dataset de trabajo" });
   }
 });
 
@@ -130,7 +147,144 @@ app.get("/api/trabajo/meta", async (_req, res) => {
     res.json({ ok: true, meta });
   } catch (e) {
     console.error("❌ /trabajo/meta:", e);
-    res.status(500).json({ ok: false, error: "No se pudo leer meta" });
+    res
+      .status(500)
+      .json({ ok: false, error: "No se pudo leer meta" });
+  }
+});
+
+// ===================================================================
+// ======================== SALUD ====================================
+// ===================================================================
+
+// Beneficiarios por año — FONASA vs ISAPRE
+app.get("/api/salud/beneficiarios", async (_req, res) => {
+  try {
+    const rows = await salud.getBeneficiarios();
+    res.json({ rows });
+  } catch (e) {
+    console.error("❌ /salud/beneficiarios:", e);
+    res
+      .status(500)
+      .json({ error: "No se pudo obtener beneficiarios" });
+  }
+});
+
+// Titular/Carga (último año común o ?year=YYYY)
+app.get("/api/salud/tipo", async (req, res) => {
+  try {
+    const { year } = req.query;
+    const data = await salud.getTipoBeneficiario({ year });
+    res.json(data);
+  } catch (e) {
+    console.error("❌ /salud/tipo:", e);
+    res
+      .status(500)
+      .json({ error: "No se pudo obtener tipo de beneficiario" });
+  }
+});
+
+// Sexo (último año común o ?year=YYYY)
+app.get("/api/salud/sexo", async (req, res) => {
+  try {
+    const { year } = req.query;
+    const data = await salud.getSexo({ year });
+    res.json(data);
+  } catch (e) {
+    console.error("❌ /salud/sexo:", e);
+    res
+      .status(500)
+      .json({ error: "No se pudo obtener distribución por sexo" });
+  }
+});
+
+// Indicadores (CSV convertidos de Excel)
+app.get("/api/salud/indicadores/:key", async (req, res) => {
+  try {
+    const rows = await salud.getIndicador(req.params.key);
+    res.json({ rows });
+  } catch (e) {
+    console.error("❌ /salud/indicadores:", e);
+    res
+      .status(500)
+      .json({ error: "No se pudo obtener el indicador" });
+  }
+});
+
+// Edad (placeholder / datos por edad)
+app.get("/api/salud/edad", async (req, res) => {
+  try {
+    const { year } = req.query;
+    const data = await salud.getEdad({ year });
+    res.json(data);
+  } catch (e) {
+    console.error("❌ /salud/edad:", e);
+    res.status(500).json({ error: "No se pudo obtener edad" });
+  }
+});
+
+// Vigencia (placeholder)
+app.get("/api/salud/vigencia", async (req, res) => {
+  try {
+    const { year } = req.query;
+    const data = await salud.getVigencia({ year });
+    res.json(data);
+  } catch (e) {
+    console.error("❌ /salud/vigencia:", e);
+    res
+      .status(500)
+      .json({ error: "No se pudo obtener vigencia" });
+  }
+});
+
+// Región (por año)
+app.get("/api/salud/region", async (req, res) => {
+  try {
+    const { year } = req.query;
+    const data = await salud.getRegion({ year });
+    res.json(data);
+  } catch (e) {
+    console.error("❌ /salud/region:", e);
+    res
+      .status(500)
+      .json({ error: "No se pudo obtener región" });
+  }
+});
+
+// ===================================================================
+// ===================== EDUCACION ===================================
+// ===================================================================
+
+// --- 1. Resumen total matrícula (serie total anual + último año disponible) ---
+app.get("/api/educacion/matricula/resumen", async (_req, res) => {
+  try {
+    const data = await educacion.getMatriculaResumen();
+    res.json(data);
+  } catch (e) {
+    console.error("❌ /educacion/matricula/resumen:", e);
+    res.status(500).json({ error: "No se pudo obtener el resumen" });
+  }
+});
+
+// --- 2. Series por nivel educativo (Parvularia, Básica, Media, etc.) ---
+app.get("/api/educacion/series", async (_req, res) => {
+  try {
+    const data = await educacion.getSeriesEducacion();
+    res.json(data);
+  } catch (e) {
+    console.error("❌ /educacion/series:", e);
+    res.status(500).json({ error: "No se pudo obtener las series" });
+  }
+});
+
+// --- 3. Distribución por sexo (donut último año) ---
+app.get("/api/educacion/sexo", async (_req, res) => {
+  try {
+    const data = await educacion.getMatriculaSexo();
+    res.json(data);
+  } catch (e) {
+    console.error("❌ /educacion/sexo:", e);
+    res.status(500).json({ error: "No se pudo obtener la información por sexo" });
   }
 });
 
