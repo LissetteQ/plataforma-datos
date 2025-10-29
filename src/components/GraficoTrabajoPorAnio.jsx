@@ -29,10 +29,13 @@ const COLORS = {
   grid: PALETA.divider,
 };
 
-// Números
+// Helpers numéricos
 const parseCL = (v) => {
   if (v == null || v === "") return null;
-  const s = String(v).replace(/[^\d,.\-]/g, "").replace(/\./g, "").replace(/,/g, ".");
+  const s = String(v)
+    .replace(/[^\d,.\-]/g, "")
+    .replace(/\./g, "")
+    .replace(/,/g, ".");
   const n = Number(s);
   return Number.isFinite(n) ? n : null;
 };
@@ -57,8 +60,11 @@ export default function GraficoTrabajoPorAnio({
   const [loading, setLoading] = useState(true);
 
   const theme = useTheme();
-  const isXs = useMediaQuery(theme.breakpoints.down("sm"));
-  const tickFont = isXs ? 11 : 12;
+
+  // 👇 Nuevo: consideramos "compacto" todo <900px
+  const isCompact = useMediaQuery(theme.breakpoints.down("md"));
+
+  const tickFont = isCompact ? 11 : 12;
 
   useEffect(() => {
     let mounted = true;
@@ -68,15 +74,19 @@ export default function GraficoTrabajoPorAnio({
         if (!mounted) return;
         const data = (Array.isArray(r) ? r : [])
           .map((d) => ({
-            anio: Number(parseCL(d.anio ?? d.ano ?? d.year ?? d.ano_trimestre)),
-            fuerza_laboral: parseCL(d.fuerza_laboral ?? d.fdt ?? d["fuerza laboral"]),
-            // TD puede venir 7,6  ó 7.6 ó 7,6%
+            anio: Number(
+              parseCL(d.anio ?? d.ano ?? d.year ?? d.ano_trimestre)
+            ),
+            fuerza_laboral: parseCL(
+              d.fuerza_laboral ?? d.fdt ?? d["fuerza laboral"]
+            ),
             tasa_desempleo: parseCL(
               String(d.tasa_desempleo ?? d.td ?? "").replace("%", "")
             ),
           }))
           .filter((d) => Number.isFinite(d.anio))
           .sort((a, b) => a.anio - b.anio);
+
         setRows(data);
       } catch (e) {
         console.error("Error cargando getAnual()", e);
@@ -106,14 +116,28 @@ export default function GraficoTrabajoPorAnio({
       </Box>
     );
 
-  const xData = rows.map((d) => String(d.anio));
-  const fuerzaData = rows.map((d) =>
-    Number.isFinite(d.fuerza_laboral) ? d.fuerza_laboral : null
+  // ==========================================
+  // DATA
+  // ==========================================
+  // Forzamos eje 2018-2024 en orden fijo
+  const forcedYears = [2018, 2019, 2020, 2021, 2022, 2023, 2024];
+
+  // indexamos los datos reales por año
+  const byYear = {};
+  rows.forEach((r) => {
+    byYear[r.anio] = r;
+  });
+
+  // construimos arrays alineados al rango fijo
+  const xData = forcedYears.map(String);
+  const fuerzaData = forcedYears.map(
+    (year) => byYear[year]?.fuerza_laboral ?? null
   );
-  const desempleoData = rows.map((d) =>
-    Number.isFinite(d.tasa_desempleo) ? d.tasa_desempleo : null
+  const desempleoData = forcedYears.map(
+    (year) => byYear[year]?.tasa_desempleo ?? null
   );
 
+  // escalas Y
   const maxFuerza = Math.max(...fuerzaData.filter((v) => v != null));
   const maxTD = Math.max(
     10,
@@ -123,11 +147,20 @@ export default function GraficoTrabajoPorAnio({
   const roundUpTo = (v, step) => Math.ceil((v || 0) / step) * step;
   const yLeftMax = roundUpTo(maxFuerza, 500_000);
 
+  // estilos del eje X:
+  // - si estamos en vista compacta, escondemos los labels internos
+  //   porque vamos a dibujar la fila manual abajo
+  // - en vista grande, sí los mostramos
+  const xAxisTickLabelStyle = isCompact
+    ? { fontSize: tickFont, fill: "transparent" }
+    : { fontSize: tickFont, fill: COLORS.axis };
+
   return (
     <Box sx={{ mt: { xs: 1.25, md: 2.25 }, width: "100%", minWidth: 0 }}>
       <Box
         sx={{
-          height: { xs: heightXs, md: heightMd },
+          // en pantallas compactas dejamos un poquito más de alto
+          height: { xs: heightXs + 28, md: heightMd },
           px: { xs: 1, sm: 2, md: 3 },
           width: "100%",
           maxWidth: "100%",
@@ -142,7 +175,8 @@ export default function GraficoTrabajoPorAnio({
               id: "x",
               data: xData,
               scaleType: "band",
-              tickLabelStyle: { fontSize: tickFont, fill: COLORS.axis },
+              tickLabelStyle: xAxisTickLabelStyle,
+              tickPlacement: "middle",
             },
           ]}
           yAxis={[
@@ -152,7 +186,7 @@ export default function GraficoTrabajoPorAnio({
               min: 0,
               max: yLeftMax,
               tickMinStep: 250_000,
-              tickNumber: isXs ? 5 : 6,
+              tickNumber: isCompact ? 5 : 6,
               tickLabelStyle: { fontSize: tickFont, fill: COLORS.axis },
               valueFormatter: fmtCompactCL,
             },
@@ -190,10 +224,10 @@ export default function GraficoTrabajoPorAnio({
             },
           ]}
           margin={{
-            top: isXs ? 8 : 12,
-            right: isXs ? 48 : 60,
-            bottom: isXs ? 32 : 36,
-            left: isXs ? 60 : 80,
+            top: isCompact ? 8 : 12,
+            right: isCompact ? 48 : 60,
+            bottom: isCompact ? 26 : 36,
+            left: isCompact ? 60 : 80,
           }}
           slotProps={{
             legend: {
@@ -214,7 +248,11 @@ export default function GraficoTrabajoPorAnio({
             tooltip: {},
           }}
         >
-          <ChartsGrid vertical horizontal sx={{ stroke: PALETA.divider, opacity: 0.7 }} />
+          <ChartsGrid
+            vertical
+            horizontal
+            sx={{ stroke: PALETA.divider, opacity: 0.7 }}
+          />
           <BarPlot />
           <LinePlot />
           <ChartsXAxis axisId="x" />
@@ -223,6 +261,43 @@ export default function GraficoTrabajoPorAnio({
           <ChartsTooltip />
         </ChartContainer>
       </Box>
+
+      {/* Fila manual con los años
+         Ahora se muestra en TODA vista "compacta" (<900px),
+         no solo en xs (<600px)
+      */}
+      {isCompact && (
+        <Box
+          sx={{
+            mt: 0.5,
+            px: { xs: 1, sm: 2 },
+          }}
+        >
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              fontFamily: "Roboto, system-ui, sans-serif",
+              fontSize: "11px",
+              lineHeight: 1.2,
+              color: COLORS.axis,
+            }}
+          >
+            {xData.map((year) => (
+              <Box
+                key={year}
+                sx={{
+                  textAlign: "center",
+                  flex: "1 1 0",
+                  minWidth: 0,
+                }}
+              >
+                {year}
+              </Box>
+            ))}
+          </Box>
+        </Box>
+      )}
 
       {showNote && (
         <Typography
