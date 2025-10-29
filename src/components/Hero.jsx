@@ -51,7 +51,7 @@ export default function Hero() {
       >
         {/* Eyebrow/Píldora superior */}
         <Chip
-          label="DATOS PARA LA DEMOCRACIA"
+          label="PLATAFORMA DE DATOS SOCIALES DE CHILE"
           sx={{
             mb: { xs: 1.5, md: 2 },
             color: "rgba(255,255,255,0.9)",
@@ -77,7 +77,7 @@ export default function Hero() {
             lineHeight: 1.15,
           }}
         >
-          Plataforma de Datos Sociales de Chile
+        Datos para la democracia
         </Typography>
 
         {/* Subrayado discreto del título */}

@@ -1,21 +1,62 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es-CL">
   <head>
     <meta charset="utf-8" />
-    <link rel="icon" href="img/favicon-32x32.png" />
+    <link rel="icon" href="img/favicon-32x32.png" type="image/png" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#000000" />
-    <meta name="description" content="Web site created using create-react-app" />
+    <meta
+      name="description"
+      content="Plataforma de datos públicos: gráficos e indicadores para una democracia informada."
+    />
+    <meta name="color-scheme" content="light dark" />
+
+    <!-- Manifest / PWA -->
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
 
-    <!-- Fuentes Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+    <!-- Fuentes Google Fonts con preconnect -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Anton&family=Poppins:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
 
     <title>Datos para la democracia</title>
+
+    <!-- Estilo mínimo para el enlace “Saltar al contenido” -->
+    <style>
+      .skip-link {
+        position: absolute;
+        left: -9999px;
+        top: 0;
+        z-index: 1000;
+        background: #ffffff;
+        color: #0b3d91;
+        padding: 0.75rem 1rem;
+        border: 2px solid #0b3d91;
+        border-radius: 6px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+      }
+      .skip-link:focus {
+        left: 0.75rem;
+        top: 0.75rem;
+        outline: none;
+      }
+    </style>
   </head>
   <body style="margin: 0">
-    <noscript>You need to enable JavaScript to run this app.</noscript>
-    <div id="root"></div>
+    <!-- Enlace accesible para saltar al contenido principal -->
+    <a href="#main-content" class="skip-link">Saltar al contenido principal</a>
+
+    <noscript>
+      Necesitas habilitar JavaScript para ejecutar esta aplicación.
+    </noscript>
+
+    <!-- Landmark principal para lectores de pantalla -->
+    <main id="main-content">
+      <div id="root"></div>
+    </main>
   </body>
 </html>

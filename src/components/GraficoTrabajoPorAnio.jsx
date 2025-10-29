@@ -116,10 +116,6 @@ export default function GraficoTrabajoPorAnio({
       </Box>
     );
 
-  // ==========================================
-  // DATA
-  // ==========================================
-  // Forzamos eje 2018-2024 en orden fijo
   const forcedYears = [2018, 2019, 2020, 2021, 2022, 2023, 2024];
 
   // indexamos los datos reales por año
@@ -147,10 +143,6 @@ export default function GraficoTrabajoPorAnio({
   const roundUpTo = (v, step) => Math.ceil((v || 0) / step) * step;
   const yLeftMax = roundUpTo(maxFuerza, 500_000);
 
-  // estilos del eje X:
-  // - si estamos en vista compacta, escondemos los labels internos
-  //   porque vamos a dibujar la fila manual abajo
-  // - en vista grande, sí los mostramos
   const xAxisTickLabelStyle = isCompact
     ? { fontSize: tickFont, fill: "transparent" }
     : { fontSize: tickFont, fill: COLORS.axis };

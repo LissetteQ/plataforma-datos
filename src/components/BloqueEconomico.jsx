@@ -27,11 +27,23 @@ import {
 import { bancoCentralService } from "../services/bancoCentralService";
 import dayjs from "dayjs";
 
+/** Utilidad: texto solo lectores de pantalla */
+const srOnly = {
+  position: "absolute",
+  width: 1,
+  height: 1,
+  padding: 0,
+  margin: -1,
+  overflow: "hidden",
+  clip: "rect(0, 0, 0, 0)",
+  whiteSpace: "nowrap",
+  border: 0,
+};
+
 /**
  * Gráfico responsive (2018 -> hoy)
  * Tarjeta más panorámica/rectangular
  */
-
 const BloqueEconomico = ({
   titulo,
   descripcion,
@@ -45,6 +57,9 @@ const BloqueEconomico = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Live message para anunciar cambios de controles
+  const [liveMsg, setLiveMsg] = useState("");
+
   // responsive breakpoints
   const isXs = useMediaQuery("(max-width:480px)");
   const isSm = useMediaQuery("(max-width:768px)");
@@ -54,6 +69,15 @@ const BloqueEconomico = ({
 
   // color translúcido para barras
   const colorSuave = useMemo(() => `${colorPrincipal}22`, [colorPrincipal]);
+
+  // IDs accesibles
+  const titleId = useMemo(
+    () =>
+      `bloque-economico-title-${Math.random().toString(36).slice(2, 8)}`,
+    []
+  );
+  const descId = `${titleId}-desc`;
+  const figId = `${titleId}-figure`;
 
   useEffect(() => {
     const hoy = dayjs().format("YYYY-MM-DD");
@@ -89,6 +113,13 @@ const BloqueEconomico = ({
     fetchData();
   }, [serieSeleccionada]);
 
+  // Anuncia cambios de filtros a lectores de pantalla
+  useEffect(() => {
+    const serieTxt = serieSeleccionada?.nombre || "Serie";
+    const tipoTxt = tipoGrafico === "lineas" ? "líneas" : "barras";
+    setLiveMsg(`Actualizado: ${serieTxt}, tipo ${tipoTxt}.`);
+  }, [serieSeleccionada, tipoGrafico]);
+
   const formatTick = (yyyyMm) => {
     if (!yyyyMm) return "";
     const [Y, M] = yyyyMm.split("-");
@@ -120,7 +151,15 @@ const BloqueEconomico = ({
     const ChartComponent = tipoGrafico === "lineas" ? LineChart : BarChart;
 
     return (
-      <ResponsiveContainer width="100%" height={chartHeight}>
+      <ResponsiveContainer
+        width="100%"
+        height={chartHeight}
+        role="img"
+        aria-label={`${titulo}. Serie: ${serieSeleccionada?.nombre}. Tipo: ${
+          tipoGrafico === "lineas" ? "líneas" : "barras"
+        }.`}
+        aria-describedby={descripcion ? descId : undefined}
+      >
         <ChartComponent
           data={data}
           margin={{
@@ -198,17 +237,25 @@ const BloqueEconomico = ({
 
   return (
     <Box
+      component="section"
+      role="region"
+      aria-labelledby={titleId}
       sx={{
         width: "100%",
         maxWidth: "100%",
         bgcolor: "#fff",
-        borderRadius: 1.5, // borde más suave
-        p: { xs: 2, md: 2 }, // menos padding alto en desktop
+        borderRadius: 1.5,
+        p: { xs: 2, md: 2 },
         boxShadow: "0 4px 16px rgba(0,0,0,0.06)",
         border: `1px solid ${paleta?.neutralBorder || "#E4E6EB"}`,
         overflow: "hidden",
       }}
     >
+      {/* Live region para cambios de filtros/serie */}
+      <Box sx={srOnly} aria-live="polite">
+        {liveMsg}
+      </Box>
+
       {/* Controles arriba del gráfico */}
       <Box
         sx={{
@@ -243,6 +290,7 @@ const BloqueEconomico = ({
             }}
           />
           <Typography
+            id={titleId}
             variant="subtitle1"
             sx={{
               fontWeight: 700,
@@ -272,10 +320,9 @@ const BloqueEconomico = ({
             size="small"
             value={serieSeleccionada.id}
             onChange={(e) =>
-              setSerieSeleccionada(
-                series.find((s) => s.id === e.target.value)
-              )
+              setSerieSeleccionada(series.find((s) => s.id === e.target.value))
             }
+            aria-label="Seleccionar serie"
             sx={{
               minWidth: { xs: "100%", sm: 200 },
               "& .MuiOutlinedInput-notchedOutline": {
@@ -299,6 +346,7 @@ const BloqueEconomico = ({
             exclusive
             onChange={(e, val) => val && setTipoGrafico(val)}
             size="small"
+            aria-label="Seleccionar tipo de gráfico"
             sx={{
               "& .MuiToggleButton-root": {
                 textTransform: "none",
@@ -323,9 +371,10 @@ const BloqueEconomico = ({
         </Box>
       </Box>
 
-      {/* Descripción (oculta en XS para no robar alto al gráfico) */}
+      {/* Descripción (relacionada con el gráfico vía aria-describedby) */}
       {descripcion && (
         <Typography
+          id={descId}
           variant="body2"
           sx={{
             color: paleta?.textSecondary || "#5A5D63",
@@ -339,24 +388,61 @@ const BloqueEconomico = ({
         </Typography>
       )}
 
-      {/* Área del gráfico */}
+      {/* Área del gráfico con figura y estados accesibles */}
       <Box
+        component="figure"
+        id={figId}
+        aria-labelledby={titleId}
+        aria-describedby={descripcion ? descId : undefined}
         sx={{
+          m: 0,
           minHeight: chartHeight,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
+          flexDirection: "column",
         }}
       >
-        {loading ? (
-          <CircularProgress size={28} />
-        ) : error ? (
-          <Alert severity="error" sx={{ fontSize: "0.8rem" }}>
-            {error}
-          </Alert>
-        ) : (
-          renderChart()
-        )}
+        {/* Live region para carga/errores del gráfico */}
+        <Box sx={srOnly} aria-live="polite">
+          {loading
+            ? "Cargando datos del gráfico…"
+            : error
+            ? "Ocurrió un error al cargar los datos."
+            : `Gráfico listo: ${data.length} puntos.`}
+        </Box>
+
+        <Box
+          sx={{ width: "100%" }}
+          aria-busy={loading ? "true" : "false"}
+          aria-describedby={descripcion ? descId : undefined}
+        >
+          {loading ? (
+            <CircularProgress size={28} aria-label="Cargando" />
+          ) : error ? (
+            <Alert severity="error" sx={{ fontSize: "0.8rem" }} role="alert">
+              {error}
+            </Alert>
+          ) : (
+            renderChart()
+          )}
+        </Box>
+
+        {/* Pie/título del gráfico visible */}
+        <figcaption>
+          <Typography
+            component="span"
+            sx={{
+              mt: 1,
+              display: "inline-block",
+              fontSize: { xs: "0.8rem", md: "0.85rem" },
+              color: paleta?.textSecondary || "#5A5D63",
+              textAlign: "center",
+            }}
+          >
+            {serieSeleccionada?.nombre || titulo}
+          </Typography>
+        </figcaption>
       </Box>
     </Box>
   );

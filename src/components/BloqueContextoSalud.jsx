@@ -9,9 +9,26 @@ const PALETA = {
   divider: "#E5E7EB",
 };
 
+const srOnly = {
+  position: "absolute",
+  width: 1,
+  height: 1,
+  padding: 0,
+  margin: -1,
+  overflow: "hidden",
+  clip: "rect(0, 0, 0, 0)",
+  whiteSpace: "nowrap",
+  border: 0,
+};
+
 export default function BloqueContextoSalud() {
+  const titleId = "ctx-salud-title";
+
   return (
     <Paper
+      component="section"
+      role="region"
+      aria-labelledby={titleId}
       elevation={0}
       sx={{
         borderRadius: 2,
@@ -20,7 +37,10 @@ export default function BloqueContextoSalud() {
         p: { xs: 1.5, sm: 2, md: 2.5 },
       }}
     >
-      {/* Título */}
+      {/* Título accesible (no visible) */}
+      <Typography id={titleId} component="h2" sx={srOnly}>
+        Contexto de salud
+      </Typography>
 
       {/* Texto político / editorial */}
       <Box
@@ -31,6 +51,7 @@ export default function BloqueContextoSalud() {
         }}
       >
         <Typography
+          component="p"
           sx={{
             fontSize: { xs: 13, sm: 14 },
             lineHeight: 1.5,
@@ -46,6 +67,7 @@ export default function BloqueContextoSalud() {
         </Typography>
 
         <Typography
+          component="p"
           sx={{
             fontSize: { xs: 13, sm: 14 },
             lineHeight: 1.5,

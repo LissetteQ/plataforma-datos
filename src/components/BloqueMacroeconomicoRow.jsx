@@ -13,6 +13,18 @@ import BloqueEconomico from "./BloqueEconomico";
  *   1 columna apilada: texto primero, gráfico después.
  */
 
+const srOnly = {
+  position: "absolute",
+  width: 1,
+  height: 1,
+  padding: 0,
+  margin: -1,
+  overflow: "hidden",
+  clip: "rect(0, 0, 0, 0)",
+  whiteSpace: "nowrap",
+  border: 0,
+};
+
 const BloqueMacroeconomicoRow = ({
   titulo,
   textoIntro,
@@ -21,8 +33,16 @@ const BloqueMacroeconomicoRow = ({
   descripcionGrafico,
   paleta,
 }) => {
+  // IDs accesibles (estables por render)
+  const titleId = `bloque-macro-title-${Math.random().toString(36).slice(2, 8)}`;
+  const descId = `${titleId}-desc`;
+
   return (
     <Box
+      component="section"
+      role="region"
+      aria-labelledby={titleId}
+      aria-describedby={descId}
       sx={{
         display: "grid",
         gridTemplateColumns: {
@@ -39,6 +59,11 @@ const BloqueMacroeconomicoRow = ({
         px: { xs: 1.5, sm: 2, md: 2 },
       }}
     >
+      {/* Encabezado accesible (solo lectores) para etiquetar la región */}
+      <Typography id={titleId} component="h2" sx={srOnly}>
+        {titulo}
+      </Typography>
+
       {/* Columna gráfico:
          - En mobile se muestra DESPUÉS del texto (order 1)
          - En desktop va a la izquierda (order 0)
@@ -80,6 +105,7 @@ const BloqueMacroeconomicoRow = ({
           pr: { xs: 0, md: 2 },
         }}
       >
+        {/* Título visible (apoya a usuarios videntes; el h2 real es sr-only) */}
         <Typography
           variant="h5"
           sx={{
@@ -95,6 +121,7 @@ const BloqueMacroeconomicoRow = ({
         </Typography>
 
         <Typography
+          id={descId}
           variant="body1"
           sx={{
             color: paleta.textSecondary,

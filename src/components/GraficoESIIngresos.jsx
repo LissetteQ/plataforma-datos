@@ -3,12 +3,10 @@ import React, { useMemo } from "react";
 import { useMediaQuery, useTheme, Box, Typography } from "@mui/material";
 import { BarChart } from "@mui/x-charts/BarChart";
 
-/* Colores institucionales */
-const COL_HOMBRES = "#0B3D91"; // azul Nodo
-const COL_MUJERES = "#D70000"; // rojo FES
-const COL_TOTAL = "#fc9797ff"; // rosado claro
+const COL_HOMBRES = "#0B3D91";
+const COL_MUJERES = "#D70000";
+const COL_TOTAL = "#fc9797ff";
 
-// Datos fijos (fallback) para la demo / presentación
 const FALLBACK_ROWS = [
   { anio: 2018, total: 620000, hombres: 660000, mujeres: 580000 },
   { anio: 2019, total: 640000, hombres: 680000, mujeres: 600000 },
@@ -19,11 +17,9 @@ const FALLBACK_ROWS = [
   { anio: 2024, total: 690000, hombres: 730000, mujeres: 650000 },
 ];
 
-// Formato pesos CLP completo (tooltip, lectura)
 const pesoCL = (v) =>
   v == null ? "—" : `$${Number(v).toLocaleString("es-CL")}`;
 
-// Formato compacto para eje Y ($735k / $1.2M)
 const pesoCompact = (v) => {
   if (v == null) return "—";
   const n = Number(v);
@@ -36,19 +32,8 @@ export default function GraficoESIIngresos() {
   const isXs = useMediaQuery(theme.breakpoints.down("sm"));
   const isMdUp = useMediaQuery(theme.breakpoints.up("md"));
 
-  // Usamos directamente el fallback como dataset base
-  const dataset = useMemo(
-    () =>
-      FALLBACK_ROWS.map((r) => ({
-        anio: r.anio,
-        hombres: r.hombres ?? null,
-        mujeres: r.mujeres ?? null,
-        total: r.total ?? null,
-      })),
-    []
-  );
+  const dataset = useMemo(() => FALLBACK_ROWS, []);
 
-  // calculamos rango eje Y con padding
   const values = dataset
     .flatMap((r) => [r.hombres, r.mujeres, r.total])
     .filter((v) => v != null);
@@ -57,17 +42,11 @@ export default function GraficoESIIngresos() {
   const maxY = values.length ? Math.max(...values) : 0;
   const pad = Math.round((maxY - minY) * 0.08);
 
-  // estilos responsivos
   const labelFont = isXs ? 11 : 12;
-  const chartHeight = isXs ? 320 : isMdUp ? 400 : 360;
+  const chartHeight = isXs ? 300 : isMdUp ? 400 : 360;
 
-  const descripcion =
-    "Este indicador resume cuánto están ganando hombres y mujeres según la Encuesta Suplementaria de Ingresos. " +
-    "Permite ver si los ingresos suben o se estancan y cuál es la brecha de género en términos concretos.";
-
-  // Render directo (sin loading, sin fetch)
   return (
-    <Box sx={{ width: "100%" }}>
+    <Box sx={{ width: "100%", position: "relative" }}>
       <BarChart
         height={chartHeight}
         dataset={dataset}
@@ -77,15 +56,15 @@ export default function GraficoESIIngresos() {
             scaleType: "band",
             tickLabelStyle: {
               fontSize: labelFont,
-              angle: isXs ? -35 : 0,
-              textAnchor: isXs ? "end" : "middle",
+              angle: isXs ? 0 : 0,
+              textAnchor: "middle",
             },
           },
         ]}
         yAxis={[
           {
-            min: values.length ? minY - pad : undefined,
-            max: values.length ? maxY + pad : undefined,
+            min: minY - pad,
+            max: maxY + pad,
             tickNumber: isXs ? 4 : 6,
             valueFormatter: pesoCompact,
             tickLabelStyle: { fontSize: labelFont },
@@ -93,58 +72,56 @@ export default function GraficoESIIngresos() {
         ]}
         margin={{
           top: isXs ? 6 : 12,
-          right: isXs ? 12 : 18,
-          bottom: isXs ? 36 : 30,
-          left: isXs ? 64 : 78,
+          right: isXs ? 10 : 18,
+          bottom: isXs ? 18 : 30,
+          left: isXs ? 60 : 80,
         }}
         series={[
-          {
-            label: "Hombres",
-            dataKey: "hombres",
-            color: COL_HOMBRES,
-            valueFormatter: (v) => pesoCL(v),
-          },
-          {
-            label: "Mujeres",
-            dataKey: "mujeres",
-            color: COL_MUJERES,
-            valueFormatter: (v) => pesoCL(v),
-          },
-          {
-            label: "Total",
-            dataKey: "total",
-            color: COL_TOTAL,
-            valueFormatter: (v) => pesoCL(v),
-          },
+          { label: "Hombres", dataKey: "hombres", color: COL_HOMBRES, valueFormatter: pesoCL },
+          { label: "Mujeres", dataKey: "mujeres", color: COL_MUJERES, valueFormatter: pesoCL },
+          { label: "Total", dataKey: "total", color: COL_TOTAL, valueFormatter: pesoCL },
         ]}
         grid={{ horizontal: true, vertical: false }}
         slotProps={{
           legend: {
             position: { vertical: "bottom", horizontal: "middle" },
             direction: "row",
-            sx: {
-              "& li": {
-                fontSize: labelFont,
-                fontFamily: "Roboto, system-ui, sans-serif",
-              },
-            },
+            sx: { "& li": { fontSize: labelFont } },
           },
-          tooltip: {
-            valueFormatter: (v) => pesoCL(v),
-          },
+          tooltip: { valueFormatter: pesoCL },
         }}
         sx={{
           "& .MuiChartsAxis-left .MuiChartsAxis-tickLabel": {
             fontSize: labelFont,
           },
-          "& .MuiChartsAxis-bottom .MuiChartsAxis-tickLabel": {
-            fontSize: labelFont,
-          },
-          "& .MuiChartsLegend-label": {
-            fontSize: `${labelFont}px`,
-          },
+          "& .MuiChartsLegend-label": { fontSize: `${labelFont}px` },
         }}
       />
+
+      {/* Línea de años visible solo en móviles */}
+      {isXs && (
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            px: 1.5,
+            mt: 1,
+          }}
+        >
+          {dataset.map((d) => (
+            <Typography
+              key={d.anio}
+              sx={{
+                fontSize: "11px",
+                flex: 1,
+                textAlign: "center",
+              }}
+            >
+              {d.anio}
+            </Typography>
+          ))}
+        </Box>
+      )}
     </Box>
   );
 }

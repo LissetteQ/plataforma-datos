@@ -6,9 +6,25 @@ const PALETA = {
   textSecondary: "#5A5D63",
 };
 
+// Utilidad: texto solo para lectores de pantalla
+const srOnly = {
+  position: "absolute",
+  width: 1,
+  height: 1,
+  padding: 0,
+  margin: -1,
+  overflow: "hidden",
+  clip: "rect(0, 0, 0, 0)",
+  whiteSpace: "nowrap",
+  border: 0,
+};
+
 export default function EduExplicacionLateral() {
   return (
     <Box
+      component="aside"
+      role="complementary"
+      aria-labelledby="edu-explicacion-title"
       sx={{
         width: "100%",
         display: "flex",
@@ -17,9 +33,16 @@ export default function EduExplicacionLateral() {
         maxWidth: { xs: "100%", md: 320 },
       }}
     >
+      {/* Título del landmark (no visible, etiqueta el aside) */}
+      <Typography id="edu-explicacion-title" component="h2" sx={srOnly}>
+        Contexto y explicación de la sección Educación
+      </Typography>
+
       {/* Bloque 1 */}
-      <Box>
+      <Box component="section" role="region" aria-labelledby="edu-b1-title">
         <Typography
+          id="edu-b1-title"
+          component="h3"
           sx={{
             fontWeight: 700,
             color: PALETA.textPrimary,
@@ -32,6 +55,7 @@ export default function EduExplicacionLateral() {
         </Typography>
 
         <Typography
+          component="p"
           sx={{
             color: PALETA.textSecondary,
             fontSize: { xs: "0.9rem", md: "0.95rem" },
@@ -49,8 +73,10 @@ export default function EduExplicacionLateral() {
       </Box>
 
       {/* Bloque 2 */}
-      <Box>
+      <Box component="section" role="region" aria-labelledby="edu-b2-title">
         <Typography
+          id="edu-b2-title"
+          component="h3"
           sx={{
             fontWeight: 700,
             color: PALETA.textPrimary,
@@ -63,6 +89,7 @@ export default function EduExplicacionLateral() {
         </Typography>
 
         <Typography
+          component="p"
           sx={{
             color: PALETA.textSecondary,
             fontSize: { xs: "0.9rem", md: "0.95rem" },

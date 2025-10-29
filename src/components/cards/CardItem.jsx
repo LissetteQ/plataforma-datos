@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useId } from 'react';
 import {
   Card,
   CardContent,
@@ -10,7 +10,11 @@ import {
 import ArrowForwardIosRoundedIcon from '@mui/icons-material/ArrowForwardIosRounded';
 import { Link } from 'react-router-dom';
 
-const CardItem = ({ title, description, image, route }) => {
+const CardItem = ({ title, description, image, route, ariaLabel }) => {
+  const baseId = useId();
+  const titleId = `carditem-title-${baseId}`;
+  const descId  = `carditem-desc-${baseId}`;
+
   return (
     <Card
       elevation={0}
@@ -32,14 +36,23 @@ const CardItem = ({ title, description, image, route }) => {
       <CardActionArea
         component={Link}
         to={route}
+        aria-label={ariaLabel || `Ir a ${title}`}
+        aria-labelledby={titleId}
+        aria-describedby={description ? descId : undefined}
         sx={{
           height: '100%',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'stretch',
+          // Foco visible accesible
+          '&:focus-visible': {
+            outline: '3px solid #0ea5e9',
+            outlineOffset: '3px',
+            borderRadius: 12,
+          },
         }}
       >
-        {/* 🔵 Zona del ícono con halo azul concentrado */}
+        {/* Zona del ícono */}
         <Box
           sx={{
             position: 'relative',
@@ -51,10 +64,10 @@ const CardItem = ({ title, description, image, route }) => {
             background: `
               radial-gradient(
                 circle 60px at center,
-                rgba(0, 170, 255, 0.85) 0%,     /* azul brillante central */
-                rgba(100, 200, 255, 0.45) 35%,  /* degradado suave */
-                rgba(180, 230, 255, 0.1) 80%,   /* halo difuso */
-                rgba(255, 255, 255, 0.0) 100%   /* se desvanece rápido */
+                rgba(0, 170, 255, 0.85) 0%,
+                rgba(100, 200, 255, 0.45) 35%,
+                rgba(180, 230, 255, 0.1) 80%,
+                rgba(255, 255, 255, 0.0) 100%
               )
             `,
           }}
@@ -82,28 +95,28 @@ const CardItem = ({ title, description, image, route }) => {
         {/* Contenido */}
         <CardContent sx={{ position: 'relative', pt: 1.5, pb: 6 }}>
           <Typography
-            variant="overline"
-            sx={{ letterSpacing: 1.5, color: 'text.secondary', opacity: 0.9 }}
-          >
-            DATASET
-          </Typography>
-
-          <Typography
+            id={titleId}
             variant="h6"
             sx={{ fontWeight: 700, color: 'text.primary', mt: 0.5, mb: 1 }}
           >
             {title}
           </Typography>
 
-          <Typography
-            variant="body2"
-            sx={{ color: 'text.secondary', lineHeight: 1.5, pb: 5 }}
-          >
-            {description}
-          </Typography>
+          {description && (
+            <Typography
+              id={descId}
+              variant="body2"
+              sx={{ color: 'text.secondary', lineHeight: 1.5, pb: 5 }}
+            >
+              {description}
+            </Typography>
+          )}
 
-          {/* Botón flecha */}
+          {/* Botón flecha (decorativo dentro del enlace) */}
           <IconButton
+            tabIndex={-1}
+            aria-hidden="true"
+            disableRipple
             sx={{
               position: 'absolute',
               right: 16,
