@@ -1,9 +1,11 @@
 import React from 'react';
 import { Box, Typography, IconButton } from '@mui/material';
 import InstagramIcon from '@mui/icons-material/Instagram';
-import TwitterIcon from '@mui/icons-material/Twitter';
 import FacebookIcon from '@mui/icons-material/Facebook';
 import RssFeedIcon from '@mui/icons-material/RssFeed';
+import XIcon from '@mui/icons-material/X';
+
+
 
 const Footer = () => {
   return (
@@ -37,16 +39,17 @@ const Footer = () => {
 
       {/* Iconos sociales */}
       <Box sx={{ display: 'flex', gap: 1 }}>
-        <IconButton color="black" href="https://www.facebook.com" target="_blank">
+        <IconButton color="black" href="https://www.facebook.com/Nodoxxi" target="_blank">
           <FacebookIcon />
         </IconButton>
-        <IconButton color="black" href="https://www.twitter.com" target="_blank">
-          <TwitterIcon />
+        <IconButton color="black" href="https://x.com/NodoXXI" target="_blank">
+          <XIcon />
         </IconButton>
-        <IconButton color="black" href="https://www.instagram.com" target="_blank">
+        <IconButton color="black" href="https://www.instagram.com/nodoxxi/?hl=es" target="_blank">
           <InstagramIcon />
         </IconButton>
         <IconButton color="black" href="#" target="_blank">
+                  <IconButton color="black" href="https://www.nodoxxi.cl/#" target="_blank"></IconButton>
           <RssFeedIcon />
         </IconButton>
       </Box>

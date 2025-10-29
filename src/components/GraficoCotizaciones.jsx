@@ -7,13 +7,14 @@ import { getDataset } from "../services/trabajoApi";
 
 // Colores institucionales
 const COLORS = {
-  cotiza: "#005597", 
-  noCotiza: "#5BC1D1", 
+  cotiza: "#005597",
+  noCotiza: "#5BC1D1",
 };
 
 // Helper: cuenta válidos (0/1), cotiza=1, noCotiza=0
 function buildMetric(rows, field) {
-  let valid = 0, si = 0;
+  let valid = 0,
+    si = 0;
   for (const r of rows) {
     const v = Number(r?.[field]);
     if (v === 0 || v === 1) {
@@ -57,7 +58,14 @@ export default function GraficoCotizaciones() {
 
   if (!rows.length) {
     return (
-      <Box sx={{ width: "100%", minHeight: 200, display: "grid", placeItems: "center" }}>
+      <Box
+        sx={{
+          width: "100%",
+          minHeight: 200,
+          display: "grid",
+          placeItems: "center",
+        }}
+      >
         <Typography variant="body2" color="text.secondary">
           No hay datos disponibles para mostrar cotizaciones.
         </Typography>
@@ -69,20 +77,20 @@ export default function GraficoCotizaciones() {
 
   return (
     <Box sx={{ width: "100%" }}>
-      <Typography variant="h6" sx={{ fontWeight: 700, textAlign: "center", mb: 1.5 }}>
-        Cotización previsional y de salud
-      </Typography>
+      {/* TÍTULO INTERNO REMOVIDO */}
 
       <BarChart
         height={300}
-        xAxis={[{
-          data: model.xData,
-          scaleType: "band",
-          tickPlacement: "middle",
-          paddingInner: 0.2,
-          paddingOuter: 0.1,
-          tickLabelStyle: { fontSize: 12 },
-        }]}
+        xAxis={[
+          {
+            data: model.xData,
+            scaleType: "band",
+            tickPlacement: "middle",
+            paddingInner: 0.2,
+            paddingOuter: 0.1,
+            tickLabelStyle: { fontSize: 12 },
+          },
+        ]}
         yAxis={[{ width: 56, label: "Porcentaje", min: 0, max: 100 }]}
         series={[
           {
@@ -105,13 +113,20 @@ export default function GraficoCotizaciones() {
           "--Charts-gridLineDash": "3 3",
           ".MuiChartsGrid-line": { stroke: COLORS.noCotiza, opacity: 0.25 },
           ".MuiBarElement-root": { rx: 6, ry: 6 },
-          ".MuiChartsAxis-bottom .MuiChartsAxis-tickLabel": { transform: "translateY(4px)" },
+          ".MuiChartsAxis-bottom .MuiChartsAxis-tickLabel": {
+            transform: "translateY(4px)",
+          },
         }}
       />
 
       <Typography
         variant="caption"
-        sx={{ display: "block", textAlign: "center", mt: 1, color: "text.secondary" }}
+        sx={{
+          display: "block",
+          textAlign: "center",
+          mt: 1,
+          color: "text.secondary",
+        }}
       >
         Total de registros: {model.total.toLocaleString("es-CL")}
       </Typography>
@@ -119,14 +134,31 @@ export default function GraficoCotizaciones() {
       {/* Línea de verificación con conteos y válidos por categoría */}
       <Typography
         variant="caption"
-        sx={{ display: "block", textAlign: "center", mt: 0.5, color: "text.secondary" }}
+        sx={{
+          display: "block",
+          textAlign: "center",
+          mt: 0.5,
+          color: "text.secondary",
+        }}
       >
-        Previsión: {model.detail.prev.siCount}/{model.detail.prev.total} cotiza ({fmtPct(model.detail.prev.pSi)}),{" "}
-        {model.detail.prev.total - model.detail.prev.siCount}/{model.detail.prev.total} no cotiza ({fmtPct(model.detail.prev.pNo)})
-        {model.detail.prev.missing ? ` — faltantes: ${model.detail.prev.missing}` : ""}.&nbsp;
-        Salud: {model.detail.salud.siCount}/{model.detail.salud.total} cotiza ({fmtPct(model.detail.salud.pSi)}),{" "}
-        {model.detail.salud.total - model.detail.salud.siCount}/{model.detail.salud.total} no cotiza ({fmtPct(model.detail.salud.pNo)})
-        {model.detail.salud.missing ? ` — faltantes: ${model.detail.salud.missing}` : ""}.
+        Previsión: {model.detail.prev.siCount}/{model.detail.prev.total} cotiza (
+        {fmtPct(model.detail.prev.pSi)}),{" "}
+        {model.detail.prev.total - model.detail.prev.siCount}/
+        {model.detail.prev.total} no cotiza (
+        {fmtPct(model.detail.prev.pNo)})
+        {model.detail.prev.missing
+          ? ` — faltantes: ${model.detail.prev.missing}`
+          : ""}
+        .&nbsp; Salud: {model.detail.salud.siCount}/
+        {model.detail.salud.total} cotiza (
+        {fmtPct(model.detail.salud.pSi)}),{" "}
+        {model.detail.salud.total - model.detail.salud.siCount}/
+        {model.detail.salud.total} no cotiza (
+        {fmtPct(model.detail.salud.pNo)})
+        {model.detail.salud.missing
+          ? ` — faltantes: ${model.detail.salud.missing}`
+          : ""}
+        .
       </Typography>
     </Box>
   );

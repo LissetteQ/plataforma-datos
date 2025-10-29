@@ -64,7 +64,7 @@ export default function GraficoSexo() {
 
   const dataset = useMemo(() => rows.map((r) => ({ ...r })), [rows]);
 
-  // ===== Texto único solicitado =====
+  // Texto único mostrado abajo
   const textoDescripcion =
     "En 2024, el ingreso promedio fue $735.000 en hombres y $635.000 en mujeres; la brecha alcanzó $100.000 (15,7%). Valores en pesos chilenos corrientes.";
 
@@ -90,17 +90,12 @@ export default function GraficoSexo() {
     top: 16,
     right: isXs ? 20 : 28,
     bottom: isXs ? 56 : 54,
-    left: isXs ? 88 : 110, // espacio para que NO se junten números con el rótulo del eje
+    left: isXs ? 88 : 110,
   };
 
   return (
     <Box sx={{ width: "100%", mt: 1 }}>
-      <Typography
-        variant={isXs ? "subtitle1" : "h6"}
-        sx={{ fontWeight: 800, textAlign: "center", mb: 1.25 }}
-      >
-        Ingreso promedio por sexo (2018–2024)
-      </Typography>
+      {/* título interno ELIMINADO */}
 
       <ChartContainer
         height={height}
@@ -141,7 +136,7 @@ export default function GraficoSexo() {
         margin={margin}
         sx={{
           "& .MuiChartsAxis-left .MuiChartsAxis-label": {
-            transform: "translate(-8px, 0)", // separa label de los ticks
+            transform: "translate(-8px, 0)",
           },
           "& .MuiChartsAxis-left .MuiChartsAxis-tickLabel": {
             textAnchor: "end",

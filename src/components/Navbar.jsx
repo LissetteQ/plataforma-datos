@@ -1,5 +1,5 @@
 // src/components/Navbar.jsx
-import React from 'react';
+import React from "react";
 import {
   AppBar,
   Toolbar,
@@ -10,9 +10,9 @@ import {
   List,
   ListItem,
   ListItemText,
-} from '@mui/material';
-import MenuIcon from '@mui/icons-material/Menu';
-import { Link } from 'react-router-dom';
+} from "@mui/material";
+import MenuIcon from "@mui/icons-material/Menu";
+import { Link } from "react-router-dom";
 
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = React.useState(false);
@@ -21,22 +21,41 @@ const Navbar = () => {
     setMobileOpen(!mobileOpen);
   };
 
+  // Menú visible
   const navItems = [
-    { label: 'Inicio', to: '/' },
-    { label: 'Explorar Datos', to: '/explorar-datos' },
-    { label: 'Herramientas', to: '/herramientas' },
-    { label: 'Documentación', to: '/documentacion' },
-    { label: 'Acerca de', to: '/acerca-de' },
-    { label: 'Contacto', to: '/contacto' },
-    { label: 'Soporte', to: '/soporte' },
+    { label: "Inicio", to: "/" },
+    { label: "Documentación", to: "/documentacion" },
+    { label: "Contáctanos", to: "/contacto" },
   ];
 
   const drawer = (
-    <Box onClick={handleDrawerToggle} sx={{ textAlign: 'center' }}>
+    <Box
+      onClick={handleDrawerToggle}
+      sx={{
+        textAlign: "center",
+        minWidth: "220px",
+        p: 2,
+      }}
+    >
       <List>
         {navItems.map((item) => (
-          <ListItem button key={item.label} component={Link} to={item.to}>
-            <ListItemText primary={item.label} />
+          <ListItem
+            key={item.label}
+            component={Link}
+            to={item.to}
+            sx={{
+              textAlign: "left",
+            }}
+          >
+            <ListItemText
+              primary={item.label.toUpperCase()}
+              primaryTypographyProps={{
+                fontWeight: 600,
+                fontFamily: "Poppins, sans-serif",
+                fontSize: "0.9rem",
+                color: "#000",
+              }}
+            />
           </ListItem>
         ))}
       </List>
@@ -49,35 +68,51 @@ const Navbar = () => {
         position="static"
         elevation={0}
         sx={{
-          backgroundColor: 'white',
-          color: 'black',
-          boxShadow: 'none',
-          borderBottom: '1px solid #e0e0e0',
+          backgroundColor: "white",
+          color: "black",
+          boxShadow: "none",
+          borderBottom: "1px solid #e0e0e0",
           px: 3,
         }}
       >
-        <Toolbar sx={{ display: 'flex', alignItems: 'center' }}>
-          {/* Logo más grande */}
-          <Box sx={{ mr: 4 }}>
-            <Link to="/">
+        <Toolbar
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            width: "100%",
+            maxWidth: "1400px",
+            mx: "auto",
+          }}
+        >
+          {/* Logo (izquierda) */}
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              mr: 2,
+            }}
+          >
+            <Link to="/" style={{ display: "inline-flex" }}>
               <img
                 src="/img/logoNodo_COLOR.png"
                 alt="Logo Nodo XXI"
                 style={{
-                  height: '80px', // aumentamos el tamaño
-                  objectFit: 'contain',
+                  height: "80px",
+                  objectFit: "contain",
                 }}
               />
             </Link>
           </Box>
 
-          {/* Menú central */}
+          {/* Menú desktop centrado un poco hacia la derecha */}
           <Box
             sx={{
-              display: { xs: 'none', sm: 'flex' },
+              display: { xs: "none", sm: "flex" },
               gap: 3,
+              alignItems: "center",
+              justifyContent: "center",
               flexGrow: 1,
-              justifyContent: 'center',
+              ml: 4, // 👈 pequeño desplazamiento hacia la derecha
             }}
           >
             {navItems.map((item) => (
@@ -86,10 +121,10 @@ const Navbar = () => {
                 component={Link}
                 to={item.to}
                 sx={{
-                  color: 'black',
+                  color: "black",
                   fontWeight: 600,
-                  fontFamily: 'Poppins, sans-serif',
-                  fontSize: '0.875rem',
+                  fontFamily: "Poppins, sans-serif",
+                  fontSize: "0.875rem",
                 }}
               >
                 {item.label.toUpperCase()}
@@ -97,24 +132,27 @@ const Navbar = () => {
             ))}
           </Box>
 
-          {/* Icono menú mobile */}
+          {/* Menú mobile (hamburguesa a la derecha) */}
           <IconButton
             color="inherit"
             aria-label="open drawer"
             edge="end"
             onClick={handleDrawerToggle}
-            sx={{ display: { xs: 'block', sm: 'none' }, ml: 'auto' }}
+            sx={{
+              display: { xs: "block", sm: "none" },
+              marginLeft: "auto",
+            }}
           >
             <MenuIcon />
           </IconButton>
         </Toolbar>
 
-        {/* Drawer para móvil */}
+        {/* Drawer mobile */}
         <Drawer
           anchor="left"
           open={mobileOpen}
           onClose={handleDrawerToggle}
-          sx={{ display: { xs: 'block', sm: 'none' } }}
+          sx={{ display: { xs: "block", sm: "none" } }}
         >
           {drawer}
         </Drawer>

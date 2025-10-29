@@ -1,4 +1,3 @@
-// backend/index.js
 require("dotenv").config();
 const express = require("express");
 const axios = require("axios");
@@ -63,11 +62,9 @@ app.post("/api/banco-central/serie", async (req, res) => {
     res.json(response.data);
   } catch (error) {
     console.error("❌ Error al obtener datos (alias /serie):", error.message);
-    res
-      .status(500)
-      .json({
-        error: "No se pudo obtener datos del Banco Central (alias /serie)",
-      });
+    res.status(500).json({
+      error: "No se pudo obtener datos del Banco Central (alias /serie)",
+    });
   }
 });
 
@@ -91,7 +88,7 @@ app.get("/api/trabajo/anual", async (_req, res) => {
 // Dataset ENE completo (permite filtros por query si los envías)
 app.get("/api/trabajo/dataset", async (req, res) => {
   try {
-    const data = await getDataset(req.query); // ← pasa filtros si vienen
+    const data = await getDataset(req.query);
     res.json(data);
   } catch (e) {
     console.error("❌ /trabajo/dataset:", e);
@@ -147,9 +144,7 @@ app.get("/api/trabajo/meta", async (_req, res) => {
     res.json({ ok: true, meta });
   } catch (e) {
     console.error("❌ /trabajo/meta:", e);
-    res
-      .status(500)
-      .json({ ok: false, error: "No se pudo leer meta" });
+    res.status(500).json({ ok: false, error: "No se pudo leer meta" });
   }
 });
 
@@ -228,7 +223,9 @@ app.get("/api/salud/vigencia", async (req, res) => {
   try {
     const { year } = req.query;
     const data = await salud.getVigencia({ year });
-    res.json(data);
+    res
+      .status(500)
+      .json({ error: "No se pudo obtener vigencia" });
   } catch (e) {
     console.error("❌ /salud/vigencia:", e);
     res
@@ -284,7 +281,9 @@ app.get("/api/educacion/sexo", async (_req, res) => {
     res.json(data);
   } catch (e) {
     console.error("❌ /educacion/sexo:", e);
-    res.status(500).json({ error: "No se pudo obtener la información por sexo" });
+    res.status(500).json({
+      error: "No se pudo obtener la información por sexo",
+    });
   }
 });
 

@@ -15,7 +15,6 @@ import {
 } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 
-// Iconos
 import PeopleIcon from "@mui/icons-material/People";
 import TrendingDownIcon from "@mui/icons-material/TrendingDown";
 import BarChartIcon from "@mui/icons-material/BarChart";
@@ -23,7 +22,6 @@ import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import ManIcon from "@mui/icons-material/Man";
 import WomanIcon from "@mui/icons-material/Woman";
 
-// Gráficos
 import GraficoTrabajoPorAnio from "../components/GraficoTrabajoPorAnio";
 import GraficoSexo from "../components/GraficoSexo";
 import GraficoCotizaciones from "../components/GraficoCotizaciones";
@@ -31,30 +29,37 @@ import GraficoJornada from "../components/GraficoJornada";
 import GraficoTasas from "../components/GraficoTasas";
 import GraficoPiramide from "../components/GraficoPiramide";
 import GraficoIngresoSexo from "../components/GraficoIngresoSexo";
-// ESI ingresos (línea anual)
 import GraficoESIIngresos from "../components/GraficoESIIngresos";
 
-import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
-import { getAnual, getTasas, getESIIngresosUltimo } from "../services/trabajoApi";
+import { jsPDF } from "jspdf";
+import {
+  getAnual,
+  getTasas,
+  getESIIngresosUltimo,
+} from "../services/trabajoApi";
 
-/* ====== PALETA (FES + Nodo XXI) ====== */
+/* ====== PALETA ====== */
 const PALETA = {
   fesBlue: "#005597",
   fesRed: "#D70000",
   fesYellow: "#FFCC00",
   nodoBlue: "#0B3D91",
-  ink: "#1F2937",
-  gray500: "#6B7280",
   cardBg: "#FFFFFF",
   divider: "#E5E7EB",
 };
 
+const PALETA_TEXT = {
+  textPrimary: "#1E1E1E",
+  textSecondary: "#5A5D63",
+  neutralBg: "#F5F6F8",
+  neutralBorder: "#E4E6EB",
+};
+
 const COLORS = {
   kpiIcon: PALETA.fesBlue,
-  kpiTitle: PALETA.ink,
-  kpiValue: PALETA.ink,
-  kpiSubtitle: PALETA.gray500,
+  kpiTitle: PALETA_TEXT.textPrimary,
+  kpiValue: PALETA_TEXT.textPrimary,
+  kpiSubtitle: PALETA_TEXT.textSecondary,
   ctaBg: PALETA.fesBlue,
   ctaBgHover: "#00447A",
   accent: PALETA.fesRed,
@@ -63,22 +68,19 @@ const COLORS = {
 
 const formMiles = (n) => Math.round((n ?? 0) / 1000).toLocaleString("es-CL");
 
-const GraficoBox = ({ children, min = 220, smH = 300, mdH = 360 }) => (
-  <Box
-    sx={{
-      width: "100%",
-      minHeight: { xs: min, sm: smH, md: mdH },
-      "& > *": { width: "100%", height: "100%" },
-    }}
-  >
-    {children}
-  </Box>
-);
-
 const KPI_HEIGHT = { xs: 96, sm: 108, md: 116 };
 const KPI_GRID = "24px 1fr 14px";
 
-function KpiCard({ icon: Icon, title, value, subtitle, badge, iconColor, to, onClick }) {
+function KpiCard({
+  icon: Icon,
+  title,
+  value,
+  subtitle,
+  badge,
+  iconColor,
+  to,
+  onClick,
+}) {
   const clickable = Boolean(to || onClick);
   const baseProps = clickable ? { component: RouterLink, to: to ?? "#" } : {};
 
@@ -101,11 +103,25 @@ function KpiCard({ icon: Icon, title, value, subtitle, badge, iconColor, to, onC
         minHeight: KPI_HEIGHT,
         textDecoration: "none",
         cursor: clickable ? "pointer" : "default",
-        "&:focus-visible": { outline: `3px solid ${PALETA.fesBlue}`, outlineOffset: 2 },
-        "&:hover": clickable ? { boxShadow: "0 4px 12px rgba(0,0,0,0.08)" } : undefined,
+        "&:focus-visible": {
+          outline: `3px solid ${PALETA.fesBlue}`,
+          outlineOffset: 2,
+        },
+        "&:hover": clickable
+          ? { boxShadow: "0 4px 12px rgba(0,0,0,0.08)" }
+          : undefined,
       }}
     >
-      <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, minHeight: 24, maxHeight: 24, overflow: "hidden" }}>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 0.5,
+          minHeight: 24,
+          maxHeight: 24,
+          overflow: "hidden",
+        }}
+      >
         <Icon sx={{ color: iconColor, fontSize: 16, flexShrink: 0 }} />
         <Typography
           sx={{
@@ -165,6 +181,7 @@ function KpiCard({ icon: Icon, title, value, subtitle, badge, iconColor, to, onC
         sx={{
           color: COLORS.kpiSubtitle,
           fontSize: { xs: 10.5, sm: 11.5 },
+          lineHeight: 1.3,
           whiteSpace: "nowrap",
           overflow: "hidden",
           textOverflow: "ellipsis",
@@ -183,16 +200,21 @@ export default function Trabajo() {
   const [esiUlt, setEsiUlt] = useState(null);
 
   const theme = useTheme();
-  const isXs = useMediaQuery(theme.breakpoints.down("sm"));
+  const isXs = useMediaQuery(theme.breakpoints.down("md"));
 
-  // ===== Menú de navegación (sin duplicados) =====
   const INDICADORES = [
     { id: "section-esi-anual", label: "Ingreso medio anual — ESI (2018–2024)" },
-    { id: "section-fuerza-desempleo", label: "Evolución de Fuerza Laboral y Desempleo" },
-    { id: "section-ingreso-por-sexo-2018-2024", label: "Ingreso promedio por sexo (2018–2024)" },
+    { id: "section-fuerza-desempleo", label: "Fuerza Laboral y Desempleo" },
+    {
+      id: "section-ingreso-por-sexo-2018-2024",
+      label: "Ingreso promedio por sexo (2018–2024)",
+    },
     { id: "section-cotizaciones", label: "Cotización previsional y de salud" },
     { id: "section-jornada", label: "Tipo de Jornada Laboral" },
-    { id: "section-ingreso-promedio-anual-sexo", label: "Ingreso promedio por sexo (promedio anual)" },
+    {
+      id: "section-ingreso-promedio-anual-sexo",
+      label: "Ingreso promedio anual por sexo",
+    },
     { id: "section-tasas-ene", label: "Tasas laborales y subutilización (ENE)" },
     { id: "section-pet", label: "Población en edad de trabajar" },
   ];
@@ -225,21 +247,264 @@ export default function Trabajo() {
     getESIIngresosUltimo().then((r) => setEsiUlt(r));
   }, []);
 
-  const exportarPDF = async () => {
-    const input = document.getElementById("seccion-trabajo");
-    const canvas = await html2canvas(input, {
-      scale: 2,
-      useCORS: true,
-      windowWidth: document.documentElement.scrollWidth,
-      windowHeight: document.documentElement.scrollHeight,
+  const handleDescargarReporte = () => {
+    const doc = new jsPDF({
+      unit: "pt",
+      format: "a4",
     });
-    const imgData = canvas.toDataURL("image/png");
-    const pdf = new jsPDF({ unit: "pt", format: "a4" });
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const ratio = pageWidth / canvas.width;
-    const imgHeight = canvas.height * ratio;
-    pdf.addImage(imgData, "PNG", 0, 0, pageWidth, imgHeight);
-    pdf.save("reporte-trabajo.pdf");
+
+    const marginX = 40;
+    let y = 60;
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(20);
+    doc.text("Informe Trabajo y Condiciones Laborales", marginX, y);
+    y += 28;
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(11);
+    const introLines = doc.splitTextToSize(
+      "Este informe resume brevemente situación laboral, ingresos, " +
+        "desempleo y condiciones de trabajo en Chile. Está pensado para " +
+        "personas y organizaciones que necesitan una lectura rápida " +
+        "sin tener que interpretar gráficos técnicos.",
+      515
+    );
+    doc.text(introLines, marginX, y);
+    y += introLines.length * 14 + 14;
+
+    const contextoLines = doc.splitTextToSize(
+      "El trabajo en Chile atraviesa transformaciones profundas: " +
+        "digitalización acelerada, teletrabajo y nuevas formas de empleo " +
+        "que tensionan reglas pensadas para otro tiempo. El desafío es " +
+        "actualizar derechos, fortalecer la fiscalización y revitalizar " +
+        "la organización de las y los trabajadores —incluida la juventud " +
+        "sindical— para que la tecnología sume bienestar y no precariedad.",
+      515
+    );
+    doc.text(contextoLines, marginX, y);
+    y += contextoLines.length * 14 + 24;
+
+    if (y > 700) {
+      doc.addPage();
+      y = 60;
+    }
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(14);
+    doc.text("1. Ingreso medio anual — ESI", marginX, y);
+    y += 20;
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(11);
+    const esiLines = doc.splitTextToSize(
+      "La Encuesta Suplementaria de Ingresos (ESI) permite ver cuánto " +
+        "ganan en promedio hombres y mujeres cada año. Esto hace visible " +
+        "la brecha salarial de género en pesos concretos. " +
+        "Un punto clave: cuando la brecha se mantiene alta, significa que " +
+        "las mujeres siguen recibiendo menos por su trabajo, incluso si " +
+        "tienen calificaciones similares.",
+      515
+    );
+    doc.text(esiLines, marginX, y);
+    y += esiLines.length * 14 + 10;
+
+    if (esiUlt && (esiUlt.total || esiUlt.hombres || esiUlt.mujeres)) {
+      const ultimoAnio =
+        esiUlt?.anio != null ? `Año ${esiUlt.anio}` : "Último año disponible";
+      const hombres = esiUlt?.hombres
+        ? `$${esiUlt.hombres.toLocaleString("es-CL")}`
+        : "—";
+      const mujeres = esiUlt?.mujeres
+        ? `$${esiUlt.mujeres.toLocaleString("es-CL")}`
+        : "—";
+      const total = esiUlt?.total
+        ? `$${esiUlt.total.toLocaleString("es-CL")}`
+        : "—";
+
+      const resumenESI = doc.splitTextToSize(
+        `${ultimoAnio}:\n` +
+          `• Ingreso promedio hombres: ${hombres}\n` +
+          `• Ingreso promedio mujeres: ${mujeres}\n` +
+          `• Ingreso promedio total: ${total}\n\n` +
+          "Estas cifras están en pesos chilenos corrientes. Leerlas año a año " +
+          "permite ver si los ingresos reales se están estancando o mejorando.",
+        515
+      );
+      doc.text(resumenESI, marginX, y);
+      y += resumenESI.length * 14 + 20;
+    }
+
+    if (y > 700) {
+      doc.addPage();
+      y = 60;
+    }
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(14);
+    doc.text("2. Fuerza laboral y desempleo", marginX, y);
+    y += 20;
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(11);
+    const fuerzaLines = doc.splitTextToSize(
+      "La fuerza laboral son las personas que están trabajando o buscando trabajo. " +
+        "La tasa de desempleo es el porcentaje de esa fuerza laboral que no tiene empleo " +
+        "aun queriendo trabajar.\n\n" +
+        "Cuando el desempleo sube, no sólo hay más gente sin ingresos: también aumenta la " +
+        "presión para aceptar peores condiciones, sueldos más bajos o jornadas más largas.",
+      515
+    );
+    doc.text(fuerzaLines, marginX, y);
+    y += fuerzaLines.length * 14 + 10;
+
+    const fuerzaVal =
+      fuerza != null ? `${formMiles(fuerza)} mil personas` : "—";
+    const desempleoVal =
+      desempleo != null ? `${desempleo.toFixed(1)}%` : "—";
+
+    const resumenFuerza = doc.splitTextToSize(
+      "Últimos datos disponibles:\n" +
+        `• Fuerza laboral total (personas ocupadas o buscando empleo): ${fuerzaVal}\n` +
+        `• Tasa de desempleo: ${desempleoVal}\n\n` +
+        "Una fuerza laboral grande con desempleo alto suele indicar que la economía no está " +
+        "creando suficiente empleo formal y estable.",
+      515
+    );
+    doc.text(resumenFuerza, marginX, y);
+    y += resumenFuerza.length * 14 + 20;
+
+    if (y > 700) {
+      doc.addPage();
+      y = 60;
+    }
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(14);
+    doc.text("3. Brecha salarial por sexo", marginX, y);
+    y += 20;
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(11);
+    const brechaLines = doc.splitTextToSize(
+      "Cuando comparamos el ingreso promedio de hombres y mujeres año a año, " +
+        "vemos cuánto más ganan ellos en promedio. Esa diferencia no es sólo “una cifra”; " +
+        "se traduce en menos autonomía económica y menor seguridad social para las mujeres.\n\n" +
+        "Esta brecha también se acumula en el tiempo: menos ingresos hoy significa menor " +
+        "cotización previsional y peores pensiones mañana.",
+      515
+    );
+    doc.text(brechaLines, marginX, y);
+    y += brechaLines.length * 14 + 20;
+
+    if (y > 700) {
+      doc.addPage();
+      y = 60;
+    }
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(14);
+    doc.text("4. Cotización en pensiones y salud", marginX, y);
+    y += 20;
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(11);
+    const cotizaLines = doc.splitTextToSize(
+      "Una proporción importante de las y los trabajadores no cotiza de forma regular " +
+        "ni en pensiones ni en salud. Eso significa que el costo del riesgo (enfermarse, " +
+        "envejecer sin pensión suficiente) recae en la familia y no en la protección social.\n\n" +
+        "Este fenómeno pega más fuerte en trabajo informal, subcontratación, plataformas " +
+        "digitales y empleo parcial no deseado.",
+      515
+    );
+    doc.text(cotizaLines, marginX, y);
+    y += cotizaLines.length * 14 + 20;
+
+    if (y > 700) {
+      doc.addPage();
+      y = 60;
+    }
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(14);
+    doc.text("5. Tipo de jornada laboral", marginX, y);
+    y += 20;
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(11);
+    const jornadaLines = doc.splitTextToSize(
+      "La mayoría declara jornada completa. Pero hay un grupo importante en media jornada. " +
+        "Ojo: muchas veces la jornada parcial no es una elección libre, sino el resultado " +
+        "de no encontrar empleo a tiempo completo. Eso es subempleo.\n\n" +
+        "Esto afecta ingresos mensuales, estabilidad y acceso a seguridad social.",
+      515
+    );
+    doc.text(jornadaLines, marginX, y);
+    y += jornadaLines.length * 14 + 20;
+
+    if (y > 700) {
+      doc.addPage();
+      y = 60;
+    }
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(14);
+    doc.text("6. Subutilización laboral", marginX, y);
+    y += 20;
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(11);
+    const subutilLines = doc.splitTextToSize(
+      "La ENE no sólo mide desempleo (personas sin trabajo que buscan). También captura " +
+        "subutilización: personas que sí trabajan pero menos horas de las que necesitan " +
+        "o en condiciones informales.\n\n" +
+        "Esto es clave porque una baja tasa de desempleo NO siempre significa que todo está bien. " +
+        "Puede haber gente ocupada en trabajos inestables, con ingresos bajos y sin protección.",
+      515
+    );
+    doc.text(subutilLines, marginX, y);
+    y += subutilLines.length * 14 + 20;
+
+    if (y > 700) {
+      doc.addPage();
+      y = 60;
+    }
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(14);
+    doc.text("7. Edad y participación laboral", marginX, y);
+    y += 20;
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(11);
+    const edadLines = doc.splitTextToSize(
+      "Al mirar por tramo de edad, se ve quiénes están ocupados, quiénes están buscando empleo " +
+        "y quiénes quedan fuera de la fuerza de trabajo. Esto permite ubicar tensiones específicas: " +
+        "jóvenes que no consiguen su primer empleo estable, mujeres adultas que dejan el trabajo para " +
+        "asumir cuidados, o personas mayores que siguen trabajando por necesidad económica.",
+      515
+    );
+    doc.text(edadLines, marginX, y);
+    y += edadLines.length * 14 + 28;
+
+    if (y > 650) {
+      doc.addPage();
+      y = 60;
+    }
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(13);
+    doc.text("Fuentes y uso de la información", marginX, y);
+    y += 20;
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    const footerLines = doc.splitTextToSize(
+      "Los indicadores provienen de la Encuesta Nacional de Empleo (ENE), " +
+        "la Encuesta Suplementaria de Ingresos (ESI) y cálculos propios " +
+        "a partir de datos laborales. Este documento puede compartirse " +
+        "libremente citando la fuente y el período de los datos.\n\n" +
+        "La interpretación busca traducir indicadores laborales en efectos " +
+        "concretos sobre ingreso, seguridad social, jornada, brechas de género " +
+        "y condiciones de vida.",
+      515
+    );
+    doc.text(footerLines, marginX, y);
+
+    doc.save("reporte_trabajo.pdf");
   };
 
   const SectionCard = ({ title, children, description, sx }) => (
@@ -248,7 +513,7 @@ export default function Trabajo() {
       sx={{
         p: { xs: 1.25, sm: 1.75, md: 2 },
         borderRadius: 2,
-        mb: { xs: 1.5, sm: 2.5, md: 3 },
+        mb: { xs: 3, md: 4 },
         bgcolor: PALETA.cardBg,
         border: `1px solid ${PALETA.divider}`,
         boxShadow: { md: "0 2px 10px rgba(0,0,0,0.04)" },
@@ -270,32 +535,46 @@ export default function Trabajo() {
           pointerEvents: "none",
         }}
       />
+
       {title && (
         <Typography
-          variant={isXs ? "subtitle2" : "subtitle1"}
           sx={{
             fontWeight: 800,
-            mb: { xs: 0.75, sm: 1 },
+            fontSize: { xs: "1rem", md: "1.05rem" },
+            lineHeight: 1.3,
             textAlign: "center",
-            color: PALETA.ink,
+            color: PALETA_TEXT.textPrimary,
+            mb: { xs: 1, md: 1.25 },
           }}
         >
           {title}
         </Typography>
       )}
+
       <Box sx={{ display: "flex", justifyContent: "center" }}>
-        <Box sx={{ width: "100%", maxWidth: { xs: "100%", md: 1100 } }}>{children}</Box>
+        <Box
+          sx={{
+            width: "100%",
+            maxWidth: { xs: "100%", md: 1100 },
+            minHeight: { xs: 220, sm: 300, md: 360 },
+            "& > *": { width: "100%", height: "100%" },
+          }}
+        >
+          {children}
+        </Box>
       </Box>
+
       {description && (
         <Typography
-          variant="body2"
           sx={{
-            color: COLORS.kpiSubtitle,
-            mt: { xs: 0.75, md: 1 },
+            mt: { xs: 1, md: 1.25 },
             textAlign: "center",
             maxWidth: 980,
             mx: "auto",
-            lineHeight: 1.45,
+            lineHeight: 1.5,
+            fontSize: { xs: "0.9rem", md: "0.9rem" },
+            color: PALETA_TEXT.textSecondary,
+            whiteSpace: "pre-line",
           }}
         >
           {description}
@@ -305,41 +584,37 @@ export default function Trabajo() {
   );
 
   const fuerzaValue = fuerza != null ? formMiles(fuerza) : "—";
-  const desempleoValue = desempleo != null ? `${desempleo.toFixed(1)}%` : "—";
+  const desempleoValue =
+    desempleo != null ? `${desempleo.toFixed(1)}%` : "—";
 
   return (
-    <Box sx={{ bgcolor: "#F9FAFB" }}>
+    <Box sx={{ bgcolor: PALETA_TEXT.neutralBg }}>
       <Container
         id="seccion-trabajo"
         maxWidth="xl"
         sx={{
-          py: { xs: 1.5, md: 3 },
-          px: { xs: 1, sm: 1.5 },
-          borderLeft: { md: `1px solid ${PALETA.divider}` },
+          py: { xs: 2, md: 4 },
+          px: { xs: 1.5, sm: 2 },
         }}
       >
-        {/* Encabezado */}
+        {/* CABECERA */}
         <Box
           sx={{
-            mb: { xs: 1.5, sm: 2.5 },
-            width: "100%",
-            display: "grid",
-            placeItems: "center",
+            textAlign: "center",
+            maxWidth: "900px",
+            mx: "auto",
+            mb: { xs: 2, md: 3 },
           }}
         >
           <Typography
             component="h1"
             sx={{
-              fontSize: { xs: 28, sm: 36, md: 44 },
-              fontWeight: 900,
-              lineHeight: 1.1,
-              color: PALETA.ink,
-              mb: { xs: 0.75, sm: 1 },
-              letterSpacing: { xs: 0.2, sm: 0.3 },
+              color: PALETA_TEXT.textPrimary,
+              fontWeight: 800,
+              lineHeight: 1.2,
+              fontSize: { xs: "2rem", sm: "2.25rem", md: "2.5rem" },
+              mb: 2,
               textAlign: "center",
-              width: "100%",
-              maxWidth: { xs: "100%", lg: 1100 },
-              mx: "auto",
             }}
           >
             Trabajo
@@ -348,40 +623,63 @@ export default function Trabajo() {
           <Typography
             component="p"
             sx={{
-              color: PALETA.gray500,
-              fontSize: { xs: 14, sm: 16, md: 17 },
-              lineHeight: 1.5,
-              textAlign: "center",
-              width: "100%",
-              maxWidth: 980,
+              color: PALETA_TEXT.textSecondary,
+              fontSize: { xs: "0.95rem", md: "1rem" },
+              lineHeight: 1.6,
+              maxWidth: "900px",
               mx: "auto",
-              px: { xs: 1, sm: 0 },
+              textAlign: "center",
             }}
           >
-            Visualización de indicadores con datos de ENE y ESI. Selecciona un
-            indicador para navegar por las secciones.
+            El trabajo en Chile atraviesa transformaciones profundas:
+            digitalización acelerada, teletrabajo y nuevas formas de empleo que
+            tensionan reglas pensadas para otro tiempo. El desafío es
+            actualizar derechos, fortalecer la fiscalización y revitalizar la
+            organización de las y los trabajadores —incluida la juventud
+            sindical— para que la tecnología sume bienestar y no precariedad.
           </Typography>
         </Box>
 
-        {/* Layout */}
-        <Box sx={{ display: "flex", gap: { xs: 0, md: 3 }, flexDirection: { xs: "column", md: "row" } }}>
-          {/* Menú lateral */}
+        {/* LAYOUT PRINCIPAL */}
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: { xs: "column", md: "row" },
+            gap: { xs: 0, md: 3 },
+          }}
+        >
+          {/* SIDEBAR */}
           <Box
             sx={{
               flexShrink: 0,
-              width: { xs: "100%", md: 300 },
+              width: { xs: "100%", md: 260 },
               position: { md: "sticky" },
               top: { md: 90 },
               maxHeight: { md: "80vh" },
               overflowY: { md: "auto" },
-              borderRight: { md: `1px solid ${PALETA.divider}` },
+              borderRight: {
+                md: `1px solid ${PALETA_TEXT.neutralBorder}`,
+              },
               pr: { md: 2 },
-              mb: { xs: 2, md: 0 },
+              mb: { xs: 3, md: 0 },
+              display: "flex",
+              flexDirection: "column",
+              backgroundColor: "transparent",
             }}
           >
-            <Typography variant="h6" sx={{ mb: 1.25, color: PALETA.ink, fontWeight: 800, letterSpacing: 0.2 }}>
+            <Typography
+              variant="h6"
+              sx={{
+                mb: 2,
+                color: PALETA_TEXT.textPrimary,
+                fontWeight: 700,
+                fontSize: "1rem",
+                lineHeight: 1.3,
+              }}
+            >
               Indicadores
             </Typography>
+
             <List dense sx={{ py: 0 }}>
               {INDICADORES.map((sec) => (
                 <ListItemButton
@@ -391,11 +689,14 @@ export default function Trabajo() {
                   sx={{
                     borderRadius: 1.5,
                     mb: 0.5,
-                    px: 1.25,
+                    px: 1.5,
                     "& .MuiListItemText-primary": {
                       fontSize: 14,
                       lineHeight: 1.3,
-                      color: activeId === sec.id ? "#fff" : PALETA.ink,
+                      color:
+                        activeId === sec.id
+                          ? "#fff"
+                          : PALETA_TEXT.textPrimary,
                       fontWeight: activeId === sec.id ? 600 : 500,
                     },
                     "&.Mui-selected": {
@@ -409,32 +710,60 @@ export default function Trabajo() {
               ))}
             </List>
 
-            <Divider sx={{ my: 2, borderColor: PALETA.divider }} />
+            <Divider
+              sx={{
+                my: 2,
+                borderColor: PALETA_TEXT.neutralBorder,
+              }}
+            />
 
             <Button
-              onClick={exportarPDF}
-              fullWidth
               variant="contained"
+              fullWidth
+              onClick={handleDescargarReporte}
               sx={{
                 backgroundColor: COLORS.ctaBg,
-                fontWeight: 800,
+                fontWeight: 700,
                 textTransform: "none",
-                py: 1,
+                fontSize: "0.9rem",
+                lineHeight: 1.2,
+                py: 1.25,
                 borderRadius: 2,
+                boxShadow: "0 4px 10px rgba(0,0,0,0.15)",
                 "&:hover": { backgroundColor: COLORS.ctaBgHover },
               }}
             >
               Descargar reporte PDF
             </Button>
+
+            <Typography
+              variant="caption"
+              sx={{
+                display: "block",
+                color: PALETA_TEXT.textSecondary,
+                lineHeight: 1.4,
+                fontSize: "0.7rem",
+                mt: 1.5,
+              }}
+            >
+              PDF con indicadores laborales más contexto social. Pensado para
+              lectura rápida sin gráficos.
+            </Typography>
           </Box>
 
-          {/* Contenido principal */}
-          <Box flexGrow={1} sx={{ minWidth: 0, width: "100%" }}>
+          {/* CONTENIDO PRINCIPAL */}
+          <Box
+            flexGrow={1}
+            sx={{
+              width: "100%",
+              minWidth: 0,
+            }}
+          >
             {/* KPIs */}
             <Box
               sx={{
-                mt: { xs: 2, md: 3.5 },
-                mb: { xs: 1.75, md: 3 },
+                mt: { xs: 1, md: 2 },
+                mb: { xs: 2, md: 3 },
                 display: "grid",
                 gap: { xs: 1, sm: 1.5, md: 2 },
                 gridTemplateColumns: {
@@ -454,14 +783,17 @@ export default function Trabajo() {
                 {
                   icon: PeopleIcon,
                   title: "Fuerza Laboral",
-                  value: fuerzaValue,
+                  value: fuerza != null ? formMiles(fuerza) : "—",
                   subtitle: "Miles de personas",
                   iconColor: COLORS.kpiIcon,
                 },
                 {
                   icon: TrendingDownIcon,
                   title: "Desempleo",
-                  value: desempleoValue,
+                  value:
+                    desempleo != null
+                      ? `${desempleo.toFixed(1)}%`
+                      : "—",
                   subtitle: "2024T2",
                   iconColor: COLORS.accent,
                 },
@@ -475,21 +807,30 @@ export default function Trabajo() {
                 {
                   icon: AttachMoneyIcon,
                   title: "Ingreso medio (ESI)",
-                  value: esiUlt?.total != null ? `$${esiUlt.total.toLocaleString("es-CL")}` : "—",
+                  value:
+                    esiUlt?.total != null
+                      ? `$${esiUlt.total.toLocaleString("es-CL")}`
+                      : "—",
                   subtitle: esiUlt?.anio ? `Año ${esiUlt.anio}` : "",
                   iconColor: COLORS.kpiIcon,
                 },
                 {
                   icon: ManIcon,
                   title: "Ingreso — Hombres",
-                  value: esiUlt?.hombres != null ? `$${esiUlt.hombres.toLocaleString("es-CL")}` : "—",
+                  value:
+                    esiUlt?.hombres != null
+                      ? `$${esiUlt.hombres.toLocaleString("es-CL")}`
+                      : "—",
                   subtitle: esiUlt?.anio ? `Año ${esiUlt.anio}` : "",
                   iconColor: COLORS.kpiIcon,
                 },
                 {
                   icon: WomanIcon,
                   title: "Ingreso — Mujeres",
-                  value: esiUlt?.mujeres != null ? `$${esiUlt.mujeres.toLocaleString("es-CL")}` : "—",
+                  value:
+                    esiUlt?.mujeres != null
+                      ? `$${esiUlt.mujeres.toLocaleString("es-CL")}`
+                      : "—",
                   subtitle: esiUlt?.anio ? `Año ${esiUlt.anio}` : "",
                   iconColor: COLORS.accent,
                 },
@@ -498,53 +839,179 @@ export default function Trabajo() {
               ))}
             </Box>
 
-            {/* Secciones */}
+            {/* === BLOQUE INTRO CON GRÁFICOS A LA IZQUIERDA Y TEXTO A LA DERECHA === */}
             <Box
-              id="section-esi-anual"
-              ref={(el) => (sectionRefs.current["section-esi-anual"] = el)}
-              sx={{ scrollMarginTop: "100px" }}
+              sx={{
+                display: "flex",
+                flexDirection: { xs: "column", md: "row" },
+                alignItems: { xs: "flex-start", md: "stretch" },
+                gap: { xs: 2, md: 3, lg: 4 },
+                mb: { xs: 4, md: 5 },
+              }}
             >
-              <SectionCard>
-                <GraficoBox>
-                  <GraficoESIIngresos />
-                </GraficoBox>
-              </SectionCard>
+              {/* IZQUIERDA: los dos primeros gráficos uno debajo del otro */}
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                {/* PRIMER GRÁFICO */}
+<Box
+  id="section-esi-anual"
+  ref={(el) =>
+    (sectionRefs.current["section-esi-anual"] = el)
+  }
+  sx={{ scrollMarginTop: "100px" }}
+>
+  <SectionCard
+    title="Ingreso medio anual — ESI (2018–2024)"
+    description={
+      "Este indicador resume cuánto están ganando hombres y mujeres según la Encuesta Suplementaria de Ingresos. Permite ver si los ingresos suben o se estancan y cuál es la brecha de género en términos concretos."
+    }
+  >
+    <GraficoESIIngresos />
+  </SectionCard>
+</Box>
+
+                {/* SEGUNDO GRÁFICO */}
+                <Box
+                  id="section-fuerza-desempleo"
+                  ref={(el) =>
+                    (sectionRefs.current["section-fuerza-desempleo"] = el)
+                  }
+                  sx={{ scrollMarginTop: "100px" }}
+                >
+                  <SectionCard
+                    title="Fuerza Laboral y Desempleo"
+                    description={
+                      "La fuerza de trabajo mide cuántas personas están disponibles para trabajar (ocupadas o buscando empleo). La tasa de desempleo muestra qué proporción no logra encontrar trabajo."
+                    }
+                  >
+                    <GraficoTrabajoPorAnio showNote={false} />
+                  </SectionCard>
+                </Box>
+              </Box>
+
+              {/* DERECHA: 3 párrafos */}
+<Box
+  sx={{
+    flexBasis: { xs: "100%", md: "35%", lg: "32%" },
+    flexShrink: 0,
+    maxWidth: { xs: "100%", md: "35%", lg: "32%" },
+    backgroundColor: "transparent",
+    borderLeft: {
+      md: `1px solid ${PALETA_TEXT.neutralBorder}`,
+    },
+    pl: { md: 3, lg: 4 },
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "center",
+  }}
+>
+  <Typography
+    sx={{
+      color: PALETA_TEXT.textSecondary,
+          fontWeight: 800,
+          textAlign: "center",
+          mb: { xs: 1, sm: 1.25 },
+          color: "#1F2937",
+          letterSpacing: 0.2,
+    }}
+  >
+    Hacia un Trabajo Digno y Corresponsable:
+  </Typography>
+
+
+  {/* PÁRRAFO 1 */}
+  <Typography
+    sx={{
+      color: PALETA_TEXT.textSecondary,
+      fontSize: { xs: "0.95rem", md: "0.95rem" },
+      lineHeight: 1.55,
+      maxWidth: 500,
+      whiteSpace: "pre-line",
+      mt: { xs: 2, md: 3 },
+      mb: { xs: 2, md: 3 },
+    }}
+  >
+    La experiencia reciente mostró, además, riesgos y costos trasladados a los
+    hogares (equipos, conectividad, espacios), jornadas extendidas y efectos
+    psicosociales que se hicieron especialmente visibles en el sector público,
+    junto con una sobrecarga de cuidados con sesgo de género que vuelve urgente
+    contar con un Sistema Nacional de Cuidados.
+  </Typography>
+
+  {/* PÁRRAFO 2 (más abajo aún) */}
+  <Typography
+    sx={{
+      color: PALETA_TEXT.textSecondary,
+      fontSize: { xs: "0.95rem", md: "0.95rem" },
+      lineHeight: 1.55,
+      maxWidth: 500,
+      whiteSpace: "pre-line",
+      mt: { xs: 3, md: 4 }, // <-- bajado más
+      mb: { xs: 1, md: 1 },
+    }}
+  >
+    Con ese marco, proponemos avanzar en cuatro frentes: (1) regular el trabajo
+    digital y de plataformas con enfoque de salud laboral y
+    corresponsabilidad; (2) instalar una política robusta de cuidados; (3)
+    garantizar condiciones dignas en los servicios públicos; y (4) promover
+    negociación colectiva y participación juvenil para incidir en las
+    mutaciones del empleo. Son pasos claves para productividad, bienestar y
+    cohesión social.
+  </Typography>
+
+  {/* PÁRRAFO 3 (muy abajo) */}
+  <Typography
+    sx={{
+      color: PALETA_TEXT.textSecondary,
+      fontSize: { xs: "0.95rem", md: "0.95rem" },
+      lineHeight: 1.55,
+      maxWidth: 500,
+      whiteSpace: "pre-line",
+     mt: { xs: 3, md: 4 }, // <-- bajado más
+      mb: { xs: 1, md: 1 },
+    }}
+  >
+    Explora los gráficos de esta sección, compara series y territorios, y
+    descarga las bases para producir tus propios análisis; si publicas o
+    compartes resultados, cita siempre la fuente y el período de los datos para
+    sostener una conversación laboral informada y útil para la toma de
+    decisiones.
+  </Typography>
+</Box>
             </Box>
 
-            <Box
-              id="section-fuerza-desempleo"
-              ref={(el) => (sectionRefs.current["section-fuerza-desempleo"] = el)}
-              sx={{ scrollMarginTop: "100px" }}
-            >
-              <SectionCard description="La evolución anual del empleo permite observar el impacto de fenómenos económicos y sociales en la fuerza laboral chilena.">
-                <GraficoBox>
-                  <GraficoTrabajoPorAnio showNote={false} />
-                </GraficoBox>
-              </SectionCard>
-            </Box>
-
-            {/* SOLO BARRAS para ingreso por sexo */}
+            {/* === RESTO DE SECCIONES === */}
             <Box
               id="section-ingreso-por-sexo-2018-2024"
-              ref={(el) => (sectionRefs.current["section-ingreso-por-sexo-2018-2024"] = el)}
+              ref={(el) =>
+                (sectionRefs.current["section-ingreso-por-sexo-2018-2024"] =
+                  el)
+              }
               sx={{ scrollMarginTop: "100px" }}
             >
-              <SectionCard description="Este gráfico de barras muestra el ingreso promedio por sexo a lo largo del tiempo (2018–2024).">
-                <GraficoBox>
-                  <GraficoSexo />
-                </GraficoBox>
+              <SectionCard
+                title="Ingreso promedio por sexo (2018–2024)"
+                description={
+                  "Aquí se ve la diferencia salarial directa entre hombres y mujeres en pesos chilenos."
+                }
+              >
+                <GraficoSexo />
               </SectionCard>
             </Box>
 
             <Box
               id="section-cotizaciones"
-              ref={(el) => (sectionRefs.current["section-cotizaciones"] = el)}
+              ref={(el) =>
+                (sectionRefs.current["section-cotizaciones"] = el)
+              }
               sx={{ scrollMarginTop: "100px" }}
             >
-              <SectionCard description="Un porcentaje importante de trabajadores no cotiza regularmente.">
-                <GraficoBox>
-                  <GraficoCotizaciones />
-                </GraficoBox>
+              <SectionCard
+                title="Cotización previsional y de salud"
+                description={
+                  "Una parte importante de trabajadoras y trabajadores no cotiza de forma regular ni en pensiones ni en salud. Eso traslada el riesgo a los hogares."
+                }
+              >
+                <GraficoCotizaciones />
               </SectionCard>
             </Box>
 
@@ -553,23 +1020,31 @@ export default function Trabajo() {
               ref={(el) => (sectionRefs.current["section-jornada"] = el)}
               sx={{ scrollMarginTop: "100px" }}
             >
-              <SectionCard description="La mayoría declara jornada completa, pero hay una porción considerable en jornada parcial.">
-                <GraficoBox>
-                  <GraficoJornada />
-                </GraficoBox>
+              <SectionCard
+                title="Tipo de Jornada Laboral"
+                description={
+                  "Mayoría jornada completa, pero hay una fracción relevante en media jornada. Muchas veces esa ‘media jornada’ no es decisión libre, sino subempleo."
+                }
+              >
+                <GraficoJornada />
               </SectionCard>
             </Box>
 
-            {/* Mantienes tu otro gráfico de ingresos promedio anual si lo deseas */}
             <Box
               id="section-ingreso-promedio-anual-sexo"
-              ref={(el) => (sectionRefs.current["section-ingreso-promedio-anual-sexo"] = el)}
+              ref={(el) =>
+                (sectionRefs.current["section-ingreso-promedio-anual-sexo"] =
+                  el)
+              }
               sx={{ scrollMarginTop: "100px" }}
             >
-              <SectionCard description="Promedio anual de ingresos de hombres y mujeres (a partir del dataset enviado).">
-                <GraficoBox>
-                  <GraficoIngresoSexo />
-                </GraficoBox>
+              <SectionCard
+                title="Ingreso promedio anual por sexo"
+                description={
+                  "Promedio anual agregado desde microdatos. Sirve para ver la persistencia de la brecha de género en el tiempo."
+                }
+              >
+                <GraficoIngresoSexo />
               </SectionCard>
             </Box>
 
@@ -578,10 +1053,13 @@ export default function Trabajo() {
               ref={(el) => (sectionRefs.current["section-tasas-ene"] = el)}
               sx={{ scrollMarginTop: "100px" }}
             >
-              <SectionCard description="TD, TO, TP, TPL y SU1–SU4, junto a TOI y TOSI según ENE.">
-                <GraficoBox>
-                  <GraficoTasas />
-                </GraficoBox>
+              <SectionCard
+                title="Tasas laborales y subutilización (ENE)"
+                description={
+                  "Además del desempleo abierto (TD), la ENE mide subutilización: personas que quieren trabajar más horas pero no pueden, o que están disponibles para trabajar pero no buscan activamente."
+                }
+              >
+                <GraficoTasas />
               </SectionCard>
             </Box>
 
@@ -592,11 +1070,19 @@ export default function Trabajo() {
             >
               <SectionCard
                 title="Población en edad de trabajar"
-                description="Distribución por edades de PET, FDT, OC, DES, ID, TPI, OBE, FTP, FTA, FFT, OI y OSI."
+                description={
+                  "Pirámide laboral por tramo de edad y sexo. Muestra dónde están las y los ocupados, desocupados y quienes quedan fuera de la fuerza de trabajo."
+                }
               >
-                <GraficoBox mdH={400}>
+                <Box
+                  sx={{
+                    width: "100%",
+                    minHeight: { xs: 280, md: 400 },
+                    "& > *": { width: "100%", height: "100%" },
+                  }}
+                >
                   <GraficoPiramide />
-                </GraficoBox>
+                </Box>
               </SectionCard>
             </Box>
           </Box>

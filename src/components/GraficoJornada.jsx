@@ -9,8 +9,8 @@ import { getDataset } from "../services/trabajoApi";
    - FES Chile rojo:  #D70000
 */
 const COL_COMPLETA = "#005597"; // Jornada completa (FES azul)
-const COL_MEDIA    = "#D70000"; // Media jornada (FES rojo)
-const STROKE       = "rgba(0,0,0,0.14)";
+const COL_MEDIA = "#D70000"; // Media jornada (FES rojo)
+const STROKE = "rgba(0,0,0,0.14)";
 
 export default function GraficoJornada() {
   const [rows, setRows] = useState([]);
@@ -24,7 +24,10 @@ export default function GraficoJornada() {
 
   const datos = useMemo(() => {
     const total = rows.length || 1;
-    const completa = rows.filter((d) => (d.jornada || "").toLowerCase() === "completa").length;
+
+    const completa = rows.filter(
+      (d) => (d.jornada || "").toLowerCase() === "completa"
+    ).length;
     const media = total - completa;
 
     const pctComp = Math.round((completa / total) * 100);
@@ -35,27 +38,43 @@ export default function GraficoJornada() {
 
     return {
       categorias: ["Jornada completa", "Media jornada"],
-      total, completa, media, pctComp, pctMedia, compDeCada10, mediaDeCada10,
+      total,
+      completa,
+      media,
+      pctComp,
+      pctMedia,
+      compDeCada10,
+      mediaDeCada10,
     };
   }, [rows]);
 
-  const { categorias, total, completa, media, pctComp, pctMedia, compDeCada10, mediaDeCada10 } = datos;
+  const {
+    categorias,
+    total,
+    completa,
+    media,
+    pctComp,
+    pctMedia,
+    compDeCada10,
+    mediaDeCada10,
+  } = datos;
 
   const height = isXs ? 280 : isMdUp ? 360 : 320;
   const labelFont = isXs ? 11 : 12;
 
   return (
     <Box sx={{ width: "100%" }}>
-      <Typography
-        variant={isXs ? "subtitle1" : "h6"}
-        sx={{ fontWeight: 800, textAlign: "center", mb: { xs: 1, md: 1.25 }, color: "#1F2937" }}
-      >
-        Tipo de Jornada Laboral
-      </Typography>
+      {/* TÍTULO INTERNO REMOVIDO */}
 
       <BarChart
         height={height}
-        xAxis={[{ data: categorias, scaleType: "band", tickLabelStyle: { fontSize: labelFont } }]}
+        xAxis={[
+          {
+            data: categorias,
+            scaleType: "band",
+            tickLabelStyle: { fontSize: labelFont },
+          },
+        ]}
         yAxis={[
           {
             min: 0,
@@ -64,7 +83,6 @@ export default function GraficoJornada() {
             label: "Porcentaje",
             valueFormatter: (v) => `${v}%`,
             tickLabelStyle: { fontSize: labelFont },
-            // ❌ labelStyle eliminado (no soportado en tu versión)
           },
         ]}
         grid={{ horizontal: true, vertical: false }}
@@ -90,37 +108,65 @@ export default function GraficoJornada() {
             valueFormatter: (v) => `${v}%`,
           },
         ]}
-        // ❌ barCategoryGapRatio y barGapRatio eliminados
         sx={{
-          ".MuiBarElement-root": { rx: 10, stroke: STROKE, strokeWidth: 1 },
+          ".MuiBarElement-root": {
+            rx: 10,
+            stroke: STROKE,
+            strokeWidth: 1,
+          },
           "& .MuiChartsTooltip-paper": { p: isXs ? 0.75 : 1 },
-          "& .MuiChartsLegend-label": { fontSize: `${labelFont}px`, fontWeight: 600 }, // estiliza leyenda sin prop inválida
         }}
         slotProps={{
           legend: {
-            direction: "row",
-            position: { vertical: "top", horizontal: "middle" },
-            // ❌ no usar labelStyle aquí
+            direction: "horizontal", // antes "row" ❌
+            position: {
+              vertical: "top",
+              horizontal: "center", // antes "middle" ❌
+            },
+            sx: {
+              "& li": {
+                fontSize: labelFont,
+                fontWeight: 600,
+                color: "#1F2937",
+                fontFamily: "Roboto, system-ui, sans-serif",
+              },
+            },
           },
           barLabel: { position: "top" },
-          tooltip: { trigger: "item", valueFormatter: (v) => `${v}%` },
+          tooltip: {
+            trigger: "item",
+            valueFormatter: (v) => `${v}%`,
+          },
         }}
       />
 
       <Typography
         variant="body2"
-        sx={{ color: "text.secondary", textAlign: "center", mt: 1.25, px: { xs: 2, md: 0 } }}
+        sx={{
+          color: "text.secondary",
+          textAlign: "center",
+          mt: 1.25,
+          px: { xs: 2, md: 0 },
+        }}
       >
-        En la muestra ({total} registros): <b>{pctComp}%</b> jornada completa ({completa} casos) y{" "}
-        <b>{pctMedia}%</b> media jornada ({media} casos).
+        En la muestra ({total} registros): <b>{pctComp}%</b> jornada completa (
+        {completa} casos) y <b>{pctMedia}%</b> media jornada ({media} casos).
       </Typography>
 
       <Typography
         variant="body2"
-        sx={{ color: "#6B7280", textAlign: "center", mt: 0.75, maxWidth: 980, mx: "auto", px: { xs: 2, md: 0 }, lineHeight: 1.45 }}
+        sx={{
+          color: "#6B7280",
+          textAlign: "center",
+          mt: 0.75,
+          maxWidth: 980,
+          mx: "auto",
+          px: { xs: 2, md: 0 },
+          lineHeight: 1.45,
+        }}
       >
-        Aproximadamente, <b>{compDeCada10} de cada 10</b> personas trabajan con jornada completa y{" "}
-        <b>{mediaDeCada10} de cada 10</b> con media jornada.
+        Aproximadamente, <b>{compDeCada10} de cada 10</b> personas trabajan con
+        jornada completa y <b>{mediaDeCada10} de cada 10</b> con media jornada.
       </Typography>
     </Box>
   );

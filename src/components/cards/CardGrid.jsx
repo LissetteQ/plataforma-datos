@@ -7,7 +7,7 @@ const cards = [
     id: 1,
     title: 'Macroeconomía',
     description: 'Datos relevantes sobre el desempeño macroeconómico de Chile: PIB, inflación y empleo.',
-    image: '/img/Macroeconomia.jpg',
+    image: '/img/grafico.png',
     route: '/macroeconomia', 
   },
 
@@ -15,21 +15,21 @@ const cards = [
     id: 3,
     title: 'Educación',
     description: 'Indicadores y datos sobre educación en Chile.',
-    image: '/img/Educacion.jpg',
+    image: '/img/libro.png',
     route: '/educacion',
   },
   {
     id: 4,
     title: 'Salud',
     description: 'Estadísticas y datos del sistema de salud.',
-    image: '/img/Salud.jpg',
+    image: '/img/salud.png',
     route: '/salud',
   },
   {
     id: 5,
     title: 'Trabajo',
     description: 'Información sobre empleo y condiciones laborales.',
-    image: '/img/Trabajo.jpg',
+    image: '/img/trabajo.png',
     route: '/trabajo',
   },
 ];

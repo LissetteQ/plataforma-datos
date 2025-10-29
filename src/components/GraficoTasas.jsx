@@ -1,4 +1,3 @@
-// src/components/GraficoTasas.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import {
   Box,
@@ -17,7 +16,6 @@ import { BarChart } from "@mui/x-charts/BarChart";
 import { LineChart } from "@mui/x-charts/LineChart";
 import { getTasas } from "../services/trabajoApi";
 
-/* Etiquetas cortas (coinciden con el backend) */
 const LABELS = {
   td: "TD",
   to: "TO",
@@ -31,10 +29,9 @@ const LABELS = {
   tosi: "TOSI",
 };
 
-const PERIODOS = ["2023T2", "2024T2"];         // disponibles en tu mock actual
+const PERIODOS = ["2023T2", "2024T2"];
 const SEXOS = ["Nacional", "Hombre", "Mujer"];
 
-/* Colores corporativos (FES/Nodo XXI) */
 const COL_FES_BLUE = "#005597";
 const COL_FES_BLUE_LIGHT = "#2B78C5";
 const COL_FES_RED = "#D70000";
@@ -47,14 +44,14 @@ export default function GraficoTasas() {
   const [periodo, setPeriodo] = useState("2024T2");
   const [sexo, setSexo] = useState("Nacional");
 
-  const [rows, setRows] = useState([]);    // vista tiempo (todos los periodos)
-  const [rowSel, setRowSel] = useState(null); // vista indicadores (un periodo)
+  const [rows, setRows] = useState([]); // para vista "tiempo"
+  const [rowSel, setRowSel] = useState(null); // para vista "indicadores"
   const [loading, setLoading] = useState(true);
 
   const theme = useTheme();
   const isXs = useMediaQuery(theme.breakpoints.down("sm"));
 
-  // Carga para vista "indicadores"
+  // carga para vista indicadores (filtra periodo+sexo)
   useEffect(() => {
     if (vista !== "indicadores") return;
     let alive = true;
@@ -71,7 +68,7 @@ export default function GraficoTasas() {
     };
   }, [vista, periodo, sexo]);
 
-  // Carga para vista "tiempo" (sin periodo => trae todos)
+  // carga para vista tiempo (solo filtra sexo)
   useEffect(() => {
     if (vista !== "tiempo") return;
     let alive = true;
@@ -91,25 +88,36 @@ export default function GraficoTasas() {
     };
   }, [vista, sexo]);
 
-  /* ===== Datos vista INDICADORES ===== */
+  // datos para vista indicadores
   const { xData, yDataBlue, yDataRed } = useMemo(() => {
     if (!rowSel) return { xData: [], yDataBlue: [], yDataRed: [] };
-    const keysBlue = ["to", "tp", "toi"]; // actividad/empleo
-    const keysRed = ["td", "tpl", "su1", "su2", "su3", "su4", "tosi"]; // desocupación/subutilización
+    const keysBlue = ["to", "tp", "toi"]; // empleo/ocupación
+    const keysRed = [
+      "td",
+      "tpl",
+      "su1",
+      "su2",
+      "su3",
+      "su4",
+      "tosi",
+    ]; // desempleo/subutilización
+
     const x = [...keysBlue, ...keysRed].map((k) => LABELS[k]);
     const yBlue = keysBlue.map((k) => Number(rowSel[k] ?? 0));
     const yRed = keysRed.map((k) => Number(rowSel[k] ?? 0));
+
     return { xData: x, yDataBlue: yBlue, yDataRed: yRed };
   }, [rowSel]);
 
-  /* ===== Datos vista TIEMPO ===== */
+  // datos para vista tiempo
   const lineData = useMemo(() => {
     if (!rows.length) return { periods: [], td: [], to: [], tp: [] };
-    const periods = rows.map((r) => String(r.periodo));
-    const td = rows.map((r) => Number(r.td ?? 0));
-    const to = rows.map((r) => Number(r.to ?? 0));
-    const tp = rows.map((r) => Number(r.tp ?? 0));
-    return { periods, td, to, tp };
+    return {
+      periods: rows.map((r) => String(r.periodo)),
+      td: rows.map((r) => Number(r.td ?? 0)),
+      to: rows.map((r) => Number(r.to ?? 0)),
+      tp: rows.map((r) => Number(r.tp ?? 0)),
+    };
   }, [rows]);
 
   return (
@@ -130,7 +138,7 @@ export default function GraficoTasas() {
             height: 40,
             flexWrap: { xs: "wrap", sm: "nowrap" },
             "& .MuiToggleButton-root": {
-              flex: { xs: 1, sm: "initial" }, // ocupa todo el ancho en mobile
+              flex: { xs: 1, sm: "initial" },
             },
           }}
         >
@@ -154,6 +162,7 @@ export default function GraficoTasas() {
                 ))}
               </Select>
             </FormControl>
+
             <FormControl size="small" fullWidth={isXs} sx={{ minWidth: 150 }}>
               <InputLabel>Ámbito</InputLabel>
               <Select
@@ -221,22 +230,20 @@ export default function GraficoTasas() {
               max: 100,
               label: "Porcentaje",
               valueFormatter: (v) => `${v}%`,
-              width: isXs ? 58 : 64, // más ancho en XS para que no se corte
+              width: isXs ? 58 : 64,
               tickLabelStyle: { fontSize: isXs ? 10 : 12 },
             },
           ]}
-          /* Dos series: azul para TO/TP/TOI y rojo para TD/TPL/SU/TOSI.
-             Para que cada una caiga en su grupo, rellenamos con nulls. */
           series={[
             {
               data: [...yDataBlue, ...Array(yDataRed.length).fill(null)],
-              label: "Actividad/Empleo (TO, TP, TOI)",
+              label: "Actividad / Empleo (TO, TP, TOI)",
               color: COL_FES_BLUE,
               valueFormatter: fmtPercent,
             },
             {
               data: [...Array(yDataBlue.length).fill(null), ...yDataRed],
-              label: "Desocupación/Subutilización (TD, TPL, SU1–SU4, TOSI)",
+              label: "Desocupación / Subutilización (TD, TPL, SU, TOSI)",
               color: COL_FES_RED,
               valueFormatter: fmtPercent,
             },
@@ -245,12 +252,20 @@ export default function GraficoTasas() {
             top: 10,
             right: 18,
             bottom: isXs ? 36 : 28,
-            left: isXs ? 66 : 78, // respira más en mobile
+            left: isXs ? 66 : 78,
           }}
           slotProps={{
             legend: {
-              direction: "row",
-              position: { vertical: "top", horizontal: "middle" },
+              direction: "horizontal",
+              position: { vertical: "top", horizontal: "center" },
+              sx: {
+                "& li": {
+                  fontSize: isXs ? 10 : 12,
+                  fontWeight: 600,
+                  color: "#1F2937",
+                  fontFamily: "Roboto, system-ui, sans-serif",
+                },
+              },
             },
           }}
           sx={{
@@ -314,8 +329,16 @@ export default function GraficoTasas() {
           margin={{ top: 10, right: 18, bottom: 28, left: isXs ? 66 : 78 }}
           slotProps={{
             legend: {
-              direction: "row",
-              position: { vertical: "bottom", horizontal: "middle" },
+              direction: "horizontal",
+              position: { vertical: "bottom", horizontal: "center" },
+              sx: {
+                "& li": {
+                  fontSize: isXs ? 10 : 12,
+                  fontWeight: 600,
+                  color: "#1F2937",
+                  fontFamily: "Roboto, system-ui, sans-serif",
+                },
+              },
             },
           }}
         />
@@ -333,8 +356,8 @@ export default function GraficoTasas() {
             px: { xs: 1, sm: 0 },
           }}
         >
-          TO: Tasa de Ocupación · TP: Tasa de Participación · TD: Tasa de
-          Desempleo · TPL: Desocupación de larga duración · SU1–SU4:
+          TO: Tasa de Ocupación · TP: Tasa de Participación · TD: Tasa
+          de Desempleo · TPL: Desocupación de larga duración · SU1–SU4:
           Subutilización · TOI/TOSI: Ocupación informal
         </Typography>
       </Box>

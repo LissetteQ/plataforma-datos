@@ -48,14 +48,12 @@ const Home = () => {
               mx: "auto",
             }}
           >
-            Accede a indicadores y visualizaciones sobre{" "}
-            <strong>Macroeconomía</strong>,{" "}
-            <strong>Educación</strong>,{" "}
-            <strong>Salud</strong> y{" "}
-            <strong>Trabajo</strong>. Cada sección presenta
-            datos oficiales en formato interactivo y
-            descargable para apoyar el análisis público y la
-            toma de decisiones informadas.
+ Esta plataforma permite explorar datos sociales y económicos de
+            Chile mediante gráficos interactivos y visualizaciones
+            temáticas. La información proviene de fuentes oficiales como el
+            Banco Central y el INE. Su objetivo es ofrecer evidencia clara y
+            reutilizable para investigación, prensa, políticas públicas y
+            trabajo territorial.
           </Typography>
         </Container>
 
@@ -84,39 +82,7 @@ const Home = () => {
             textAlign: "center",
           }}
         >
-          <Typography
-            variant="h5"
-            gutterBottom
-            sx={{
-              fontWeight: 700,
-              fontSize: { xs: "1.1rem", md: "1.4rem" },
-              mb: 2,
-              color: "text.primary",
-            }}
-          >
-            Plataforma de Visualización de Datos Públicos
-            de Chile
-          </Typography>
 
-          <Typography
-            variant="body1"
-            sx={{
-              color: "text.secondary",
-              fontSize: { xs: "0.9rem", md: "1rem" },
-              lineHeight: 1.6,
-              maxWidth: "800px",
-              mx: "auto",
-            }}
-          >
-            Esta plataforma permite explorar datos sociales y
-            económicos de Chile mediante gráficos
-            interactivos, mapas y visualizaciones temáticas.
-            La información proviene de fuentes oficiales
-            como el Banco Central y el INE. Su objetivo es
-            ofrecer evidencia clara y reutilizable para
-            investigación, prensa, políticas públicas y
-            trabajo territorial.
-          </Typography>
         </Container>
       </Box>
     </Box>

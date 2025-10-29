@@ -52,58 +52,93 @@ export const getSerieBC = async ({ serieId, startDate = "", endDate = "" }) =>
     return data;
   });
 
-/* ===== NUEVO: ESI Ingresos ===== */
+/* ===== Helpers de ingresos (ESI) ===== */
 
+// Calcula promedios H/M/Total por año desde el dataset crudo (fallback)
 const seriesFromDataset = (ds = []) => {
   const acc = new Map();
   ds.forEach((r) => {
     const a = Number(r.anio);
     if (!Number.isFinite(a)) return;
-    const key = r.sexo === "Hombre" ? "Hombres" : "Mujeres";
-    if (!acc.has(a)) acc.set(a, { Hombres: { s: 0, c: 0 }, Mujeres: { s: 0, c: 0 } });
-    const slot = acc.get(a)[key];
-    const v = Number(r.ingreso_promedio ?? 0);
-    if (Number.isFinite(v)) {
-      slot.s += v;
-      slot.c += 1;
+
+    const sexo = String(r.sexo || "").trim();
+    const v = Number(r.ingreso_promedio ?? NaN);
+    if (!Number.isFinite(v)) return;
+
+    if (!acc.has(a)) {
+      acc.set(a, {
+        Hombres: { s: 0, c: 0 },
+        Mujeres: { s: 0, c: 0 },
+      });
+    }
+
+    if (sexo === "Hombre") {
+      acc.get(a).Hombres.s += v;
+      acc.get(a).Hombres.c += 1;
+    } else if (sexo === "Mujer") {
+      acc.get(a).Mujeres.s += v;
+      acc.get(a).Mujeres.c += 1;
     }
   });
+
   return Array.from(acc.entries())
     .map(([anio, g]) => {
-      const hombres = g.Hombres.c ? Math.round(g.Hombres.s / g.Hombres.c) : null;
-      const mujeres = g.Mujeres.c ? Math.round(g.Mujeres.s / g.Mujeres.c) : null;
+      const hombres = g.Hombres.c
+        ? Math.round(g.Hombres.s / g.Hombres.c)
+        : null;
+      const mujeres = g.Mujeres.c
+        ? Math.round(g.Mujeres.s / g.Mujeres.c)
+        : null;
+
       const total =
         hombres != null && mujeres != null
           ? Math.round((hombres + mujeres) / 2)
           : hombres ?? mujeres ?? null;
+
       return { anio, total, hombres, mujeres };
     })
     .sort((a, b) => a.anio - b.anio);
 };
 
+// IMPORTANTE: versión robusta
 export const getESIIngresos = async (params = {}) => {
-  // 1) Endpoint backend
+  // 1) Intentar backend oficial
   try {
     const { data } = await api.get("/trabajo/esi/ingresos", { params });
-    const rows = Array.isArray(data) ? data : data?.rows ?? [];
-    if (rows.length) return rows;
+
+    // backend puede ser { rows: [...] } o directamente [...]
+    const rowsFromBackend = Array.isArray(data) ? data : data?.rows ?? [];
+
+    if (rowsFromBackend.length > 0) {
+      return rowsFromBackend;
+    }
+
+    console.warn(
+      "[getESIIngresos] Backend respondió pero sin filas, usando fallback dataset."
+    );
   } catch (e) {
-    console.warn("[getESIIngresos] Endpoint no disponible, usando fallback dataset.");
+    console.warn(
+      "[getESIIngresos] /trabajo/esi/ingresos no disponible, usando fallback dataset.",
+      e?.message
+    );
   }
-  // 2) Fallback (dataset ya existente)
+
+  // 2) Fallback: calculado desde el dataset general (ya lo tienes en CSV)
   const ds = await getDataset();
   return seriesFromDataset(ds);
 };
 
+// último año disponible para las tarjetas KPI
 export const getESIIngresosUltimo = async () => {
   const rows = await getESIIngresos();
   if (!Array.isArray(rows) || rows.length === 0) {
     return { anio: null, total: null, hombres: null, mujeres: null };
   }
+  // elegir el año más alto
   return rows.reduce((a, b) => (a.anio > b.anio ? a : b));
 };
 
-// (opcional) export default con todo junto
+// export default opcional si lo estás usando en otra parte
 export default {
   getAnual,
   getDataset,
@@ -113,4 +148,3 @@ export default {
   getESIIngresos,
   getESIIngresosUltimo,
 };
-  
