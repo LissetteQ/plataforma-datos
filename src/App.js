@@ -1,6 +1,6 @@
 // src/App.jsx
 import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -19,7 +19,7 @@ import { Box } from "@mui/material";
 
 function App() {
   return (
-    <Router>
+    <>
       {/* Enlace accesible para saltar al contenido principal */}
       <Box
         component="a"
@@ -60,7 +60,7 @@ function App() {
       </main>
 
       <Footer />
-    </Router>
+    </>
   );
 }
 
