@@ -3,7 +3,8 @@ import axios from "axios";
 // ✅ Usa variable de entorno en producción, localhost solo si no existe
 const API_BASE_URL =
   process.env.REACT_APP_API_URL
-    ? `${process.env.REACT_APP_API_URL}/banco-central`
+  ? "/api/banco-central"
+    // ? `${process.env.REACT_APP_API_URL}/banco-central`
     : "http://localhost:5000/api/banco-central";
 
 export const bancoCentralService = {
