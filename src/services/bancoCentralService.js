@@ -9,6 +9,8 @@ const API_BASE_URL =
 export const bancoCentralService = {
   getSerie: async (serieId, startDate, endDate) => {
     try {
+      console.log("hola", process.env.SITE_NAME);
+      debugger;
       const res = await axios.post(`${API_BASE_URL}/obtenerSerie`, {
         serieId,
         startDate,
