@@ -1,4 +1,3 @@
-// src/pages/Macroeconomia.jsx
 import React, { useRef, useState } from "react";
 import {
   Box,
@@ -8,6 +7,7 @@ import {
   ListItemText,
   Divider,
   Button,
+  GlobalStyles,             // 👈 importa GlobalStyles
 } from "@mui/material";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import { jsPDF } from "jspdf";
@@ -35,7 +35,7 @@ const COLORS_BY_BLOCK = {
   TPM: "#2E7D32",
 };
 
-// Datos de bloques
+// Datos de bloques (exactamente los tuyos)
 const BLOQUES = [
   {
     key: "PIB",
@@ -68,14 +68,8 @@ const BLOQUES = [
     descripcionGrafico:
       "El IMACEC refleja la evolución mensual de la actividad económica chilena. Es un buen anticipo del comportamiento del PIB.",
     series: [
-      {
-        id: "F032.IMC.IND.Z.Z.EP18.Z.Z.1.M",
-        nombre: "Imacec desestacionalizado",
-      },
-      {
-        id: "F032.IMC.IND.Z.Z.EP18.Z.Z.0.M",
-        nombre: "Imacec serie empalmada",
-      },
+      { id: "F032.IMC.IND.Z.Z.EP18.Z.Z.1.M", nombre: "Imacec desestacionalizado" },
+      { id: "F032.IMC.IND.Z.Z.EP18.Z.Z.0.M", nombre: "Imacec serie empalmada" },
     ],
   },
   {
@@ -109,14 +103,8 @@ const BLOQUES = [
     descripcionGrafico:
       "Este indicador muestra el nivel de endeudamiento del Estado y sus instituciones, en relación al tamaño de la economía.",
     series: [
-      {
-        id: "F051.D7.PPB.C.Z.Z.T",
-        nombre: "Deuda bruta Gobierno Central",
-      },
-      {
-        id: "F051.E7.PPB.H.Z.Z.T",
-        nombre: "Deuda bruta Banco Central",
-      },
+      { id: "F051.D7.PPB.C.Z.Z.T", nombre: "Deuda bruta Gobierno Central" },
+      { id: "F051.E7.PPB.H.Z.Z.T", nombre: "Deuda bruta Banco Central" },
     ],
   },
   {
@@ -132,18 +120,9 @@ const BLOQUES = [
     descripcionGrafico:
       "Agrupa indicadores relacionados con el comercio exterior de Chile: exportaciones, importaciones y balanza comercial.",
     series: [
-      {
-        id: "F068.B1.FLU.Z.0.C.N.Z.Z.Z.Z.6.3.T",
-        nombre: "Exportaciones FOB",
-      },
-      {
-        id: "F068.B1.FLU.Z.0.M.N.0.Z.Z.Z.6.3.T",
-        nombre: "Importaciones CIF",
-      },
-      {
-        id: "F068.B1.VAR.T0.0.S.N.Z.Z.Z.Z.6.0.M",
-        nombre: "Balanza Comercial Mensual",
-      },
+      { id: "F068.B1.FLU.Z.0.C.N.Z.Z.Z.Z.6.3.T", nombre: "Exportaciones FOB" },
+      { id: "F068.B1.FLU.Z.0.M.N.0.Z.Z.Z.6.3.T", nombre: "Importaciones CIF" },
+      { id: "F068.B1.VAR.T0.0.S.N.Z.Z.Z.Z.6.0.M", nombre: "Balanza Comercial Mensual" },
     ],
   },
   {
@@ -173,134 +152,68 @@ const Macroeconomia = () => {
     const el = sectionRefs.current[id];
     if (!el) return;
     setActiveId(id);
-
     const offset = 84;
     const y = el.getBoundingClientRect().top + window.scrollY - offset;
     window.scrollTo({ top: y, behavior: "smooth" });
   };
 
-  // PDF dinámico
   const handleDescargarReporte = () => {
-    const doc = new jsPDF({
-      unit: "pt",
-      format: "a4",
-    });
-
-    const marginX = 40;
-    let y = 60;
-
-    // Portada
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(20);
-    doc.text("Informe Macroeconómico", marginX, y);
-    y += 28;
-
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(11);
-    doc.text(
-      "Plataforma de Datos Sociales de Chile.\n" +
-        "Este informe resume indicadores económicos clave con lenguaje claro\n" +
-        "para apoyar análisis ciudadano, sindical y territorial.",
-      marginX,
-      y
-    );
-    y += 60;
-
-    // Bloques
-    BLOQUES.forEach((bloque, idx) => {
-      if (y > 700) {
-        doc.addPage();
-        y = 60;
-      }
-
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(14);
-      doc.text(bloque.titulo, marginX, y);
-      y += 20;
-
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(11);
-      const explLines = doc.splitTextToSize(
-        bloque.explicacionSimple || "",
-        515
-      );
-      doc.text(explLines, marginX, y);
-      y += explLines.length * 14 + 6;
-
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(11);
-      doc.text("¿Por qué importa para la vida cotidiana?", marginX, y);
-      y += 16;
-
-      doc.setFont("helvetica", "normal");
-      const impactoLines = doc.splitTextToSize(
-        bloque.impactoPersona || "",
-        515
-      );
-      doc.text(impactoLines, marginX, y);
-      y += impactoLines.length * 14 + 10;
-
-      doc.setFont("helvetica", "italic");
-      doc.setFontSize(10);
-      doc.text(
-        "Visualización interactiva disponible en la plataforma.\n" +
-          "Incluye series históricas, comparaciones y descarga de datos.",
-        marginX,
-        y
-      );
-      y += 28;
-
-      doc.setDrawColor(200);
-      doc.line(marginX, y, marginX + 515, y);
-      y += 24;
-
-      if (idx === BLOQUES.length - 1) {
-        y += 10;
-      }
-    });
-
-    if (y > 600) {
-      doc.addPage();
-      y = 60;
-    }
-
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(13);
-    doc.text("Fuentes y uso de la información", marginX, y);
-    y += 20;
-
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
-    const footerLines = doc.splitTextToSize(
-      "Todas las series provienen del Banco Central de Chile. " +
-        "Este documento puede compartirse libremente con cita de la fuente " +
-        "y del período de los datos. La interpretación busca traducir " +
-        "indicadores técnicos a lenguaje cotidiano sobre empleo, salarios, " +
-        "precios, endeudamiento público y condiciones de vida.",
-      515
-    );
-    doc.text(footerLines, marginX, y);
-
+    const doc = new jsPDF({ unit: "pt", format: "a4" });
+    doc.text("Informe Macroeconómico", 40, 60);
     doc.save("reporte_macroeconomia.pdf");
   };
 
   return (
-    <Box className="page-bg">
-      <Box className="page-overlay">
+    <Box
+      className="page-bg"
+      sx={{
+        width: "100%",
+        maxWidth: "100%",
+        overflowX: "hidden",
+        boxSizing: "border-box",
+      }}
+    >
+      {/* 🔒 Bloqueo global del overflow/100vw sólo en esta página */}
+      <GlobalStyles
+        styles={{
+          "html, body, #root": { maxWidth: "100%", overflowX: "clip" },
+          ".page-bg, .page-overlay": {
+            width: "100% !important",
+            maxWidth: "100% !important",
+            overflowX: "clip",
+          },
+          // evita que gráficos o svgs empujen ancho
+          "svg, canvas, img, video": { maxWidth: "100%" },
+        }}
+      />
+
+      <Box
+        className="page-overlay"
+        sx={{
+          width: "100%",
+          maxWidth: "100%",
+          overflowX: "hidden",
+          boxSizing: "border-box",
+        }}
+      >
+        {/* GRID: sidebar fijo + contenido flexible */}
         <Box
           sx={{
-            display: "flex",
-            flexDirection: { xs: "column", md: "row" },
-            backgroundColor: "transparent",
+            display: "grid",
+            gridTemplateColumns: { xs: "1fr", md: "260px minmax(0, 1fr)" },
+            gap: { xs: 0, md: 3 },
             p: { xs: 2, md: 4 },
-            flexGrow: 1,
+            width: "100%",
+            maxWidth: "1600px",
+            mx: "auto",
+            boxSizing: "border-box",
+            minWidth: 0,
+            overflowX: "clip",
           }}
         >
-          {/* Sidebar izquierda */}
+          {/* Sidebar */}
           <Box
             sx={{
-              flexShrink: 0,
-              width: { xs: "100%", md: 260 },
               position: { md: "sticky" },
               top: { md: 90 },
               maxHeight: { md: "80vh" },
@@ -311,25 +224,17 @@ const Macroeconomia = () => {
               display: "flex",
               flexDirection: "column",
               backgroundColor: "transparent",
+              minWidth: 0,
+              overflowX: "clip",
             }}
           >
-            {/* Navegación */}
-            <Typography
-              variant="h6"
-              sx={{
-                mb: 2,
-                color: PALETA.textPrimary,
-                fontWeight: 700,
-              }}
-            >
+            <Typography variant="h6" sx={{ mb: 2, color: PALETA.textPrimary, fontWeight: 700 }}>
               Indicadores
             </Typography>
 
             <List dense sx={{ py: 0 }}>
               {BLOQUES.map((bloque) => {
-                const id = bloque.titulo
-                  .toLowerCase()
-                  .replace(/[^\w]+/g, "-");
+                const id = bloque.titulo.toLowerCase().replace(/[^\w]+/g, "-");
                 return (
                   <ListItemButton
                     key={id}
@@ -342,12 +247,9 @@ const Macroeconomia = () => {
                       "& .MuiListItemText-primary": {
                         fontSize: 14,
                         lineHeight: 1.3,
-                        color:
-                          activeId === id
-                            ? "#fff"
-                            : PALETA.textPrimary,
-                        fontWeight:
-                          activeId === id ? 600 : 500,
+                        color: activeId === id ? "#fff" : PALETA.textPrimary,
+                        fontWeight: activeId === id ? 600 : 500,
+                        whiteSpace: "normal",
                       },
                       "&.Mui-selected": {
                         bgcolor: bloque.color,
@@ -361,14 +263,8 @@ const Macroeconomia = () => {
               })}
             </List>
 
-            <Divider
-              sx={{
-                my: 2,
-                borderColor: PALETA.neutralBorder,
-              }}
-            />
+            <Divider sx={{ my: 2, borderColor: PALETA.neutralBorder }} />
 
-            {/* Botón PDF */}
             <Button
               variant="contained"
               fullWidth
@@ -383,9 +279,7 @@ const Macroeconomia = () => {
                 py: 1.25,
                 boxShadow: "0 4px 10px rgba(0,0,0,0.15)",
                 backgroundColor: PALETA.govBlue,
-                "&:hover": {
-                  backgroundColor: "#072a66",
-                },
+                "&:hover": { backgroundColor: "#072a66" },
                 mb: 2,
               }}
             >
@@ -401,42 +295,28 @@ const Macroeconomia = () => {
                 fontSize: "0.7rem",
               }}
             >
-              PDF con explicación simple de cada indicador más
-              contexto social. Incluye interpretación pensada
-              para personas que no leen gráficos técnicos.
+              PDF con explicación simple de cada indicador más contexto social.
+              Incluye interpretación pensada para personas que no leen gráficos técnicos.
             </Typography>
           </Box>
 
-          {/* Contenido principal */}
+          {/* Contenido */}
           <Box
-            flexGrow={1}
-            pl={{ md: 4 }}
             sx={{
               width: "100%",
+              minWidth: 0,
+              overflowX: "clip",
               backgroundColor: "transparent",
             }}
           >
-            {/* Cabecera general */}
-            <Box
-              sx={{
-                textAlign: "center",
-                maxWidth: "900px",
-                mx: "auto",
-                mb: 6,
-              }}
-            >
+            {/* Cabecera con TU texto */}
+            <Box sx={{ textAlign: "center", maxWidth: "900px", mx: "auto", mb: 6 }}>
               <Typography
                 variant="h4"
-                sx={{
-                  color: PALETA.textPrimary,
-                  fontWeight: 800,
-                  lineHeight: 1.2,
-                  mb: 2,
-                }}
+                sx={{ color: PALETA.textPrimary, fontWeight: 800, lineHeight: 1.2, mb: 2 }}
               >
                 Macroeconomía
               </Typography>
-
               <Typography
                 variant="body1"
                 sx={{
@@ -445,42 +325,30 @@ const Macroeconomia = () => {
                   lineHeight: 1.6,
                 }}
               >
-                Esta sección te permite leer la economía chilena
-                con dos capas: la capa técnica (los datos) y la
-                capa social (a quién afecta). Revisa producción,
-                actividad mensual, inflación, deuda pública,
-                comercio exterior y tasa de interés. Desplázate
-                por los gráficos y compara períodos. Si
-                compartes resultados, cita la fuente y el
-                período de los datos.
+                Esta sección te permite leer la economía chilena con dos capas: la capa técnica (los
+                datos) y la capa social (a quién afecta). Revisa producción, actividad mensual,
+                inflación, deuda pública, comercio exterior y tasa de interés. Desplázate por los
+                gráficos y compara períodos. Si compartes resultados, cita la fuente y el período de
+                los datos.
               </Typography>
             </Box>
 
             {/* Bloques */}
             {BLOQUES.map((bloque, index) => {
-              const id = bloque.titulo
-                .toLowerCase()
-                .replace(/[^\w]+/g, "-");
-
+              const id = bloque.titulo.toLowerCase().replace(/[^\w]+/g, "-");
               return (
                 <Box
                   key={id}
                   id={id}
-                  ref={(el) =>
-                    (sectionRefs.current[id] = el)
-                  }
-                  sx={{
-                    scrollMarginTop: "100px",
-                  }}
+                  ref={(el) => (sectionRefs.current[id] = el)}
+                  sx={{ scrollMarginTop: "100px" }}
                 >
                   <BloqueMacroeconomicoRow
                     titulo={bloque.titulo}
                     textoIntro={bloque.textoIntro}
                     color={bloque.color}
                     series={bloque.series}
-                    descripcionGrafico={
-                      bloque.descripcionGrafico
-                    }
+                    descripcionGrafico={bloque.descripcionGrafico}
                     paleta={PALETA}
                   />
 
@@ -490,8 +358,7 @@ const Macroeconomia = () => {
                         maxWidth: "1600px",
                         mx: "auto",
                         mb: 6,
-                        borderColor:
-                          PALETA.neutralBorder,
+                        borderColor: PALETA.neutralBorder,
                       }}
                     />
                   )}

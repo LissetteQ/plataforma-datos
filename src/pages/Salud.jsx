@@ -1,5 +1,5 @@
 // src/pages/Salud.jsx
-import React, { useEffect, useRef, useState, useId } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Box,
   Container,
@@ -39,19 +39,6 @@ const COLORS = {
   ctaBgHover: "#00447A",
 };
 
-/* util: clase para texto solo-lectores de pantalla */
-const srOnly = {
-  position: "absolute",
-  width: 1,
-  height: 1,
-  padding: 0,
-  margin: -1,
-  overflow: "hidden",
-  clip: "rect(0, 0, 0, 0)",
-  whiteSpace: "nowrap",
-  border: 0,
-};
-
 /* ===== KPI CARD ===== */
 const KPI_HEIGHT = { xs: 96, sm: 108, md: 116 };
 const KPI_GRID = "24px 1fr 14px";
@@ -64,20 +51,9 @@ function KpiCard({
   badge,
   iconColor = PALETA.fesBlue,
 }) {
-  const baseId = useId();
-  const groupId = `kpi-${baseId}`;
-  const titleId = `kpi-title-${baseId}`;
-  const valueId = `kpi-value-${baseId}`;
-  const subId = `kpi-sub-${baseId}`;
-  const badgeId = `kpi-badge-${baseId}`;
-
   return (
     <Paper
       elevation={0}
-      role="group"
-      aria-labelledby={titleId}
-      aria-describedby={`${valueId} ${subId} ${badge ? badgeId : ""}`}
-      id={groupId}
       sx={{
         p: { xs: 1, sm: 1.25 },
         borderRadius: 2,
@@ -103,7 +79,6 @@ function KpiCard({
       >
         <Icon sx={{ color: iconColor, fontSize: 16, flexShrink: 0 }} />
         <Typography
-          id={titleId}
           sx={{
             fontWeight: 800,
             color: PALETA.ink,
@@ -120,8 +95,6 @@ function KpiCard({
         </Typography>
 
         <Box
-          id={badgeId}
-          aria-label="Variación"
           sx={{
             fontSize: 9,
             fontWeight: 700,
@@ -143,7 +116,6 @@ function KpiCard({
       {/* valor grande */}
       <Box sx={{ display: "flex", alignItems: "center" }}>
         <Typography
-          id={valueId}
           sx={{
             fontWeight: 900,
             fontSize: { xs: 18, sm: 20, md: 22 },
@@ -161,7 +133,6 @@ function KpiCard({
 
       {/* sub */}
       <Typography
-        id={subId}
         sx={{
           color: PALETA.gray500,
           fontSize: { xs: 10.5, sm: 11.5 },
@@ -222,14 +193,6 @@ const FALLBACK_TIPO = {
 export default function Salud() {
   const sectionRefs = useRef({});
   const [activeId, setActiveId] = useState("");
-
-  // IDs accesibles de la página
-  const pageIds = {
-    h1: "salud-title",
-    nav: "salud-nav",
-    btnPdf: "btn-salud-pdf",
-    btnPdfDesc: "btn-salud-pdf-desc",
-  };
 
   // series totales FONASA/ISAPRE
   const [years, setYears] = useState([]);
@@ -497,9 +460,6 @@ export default function Salud() {
     <Box sx={{ bgcolor: "#F9FAFB" }}>
       <Container
         id="seccion-salud"
-        component="main"
-        role="main"
-        aria-labelledby={pageIds.h1}
         maxWidth="xl"
         sx={{
           py: { xs: 1.5, md: 3 },
@@ -517,7 +477,6 @@ export default function Salud() {
           }}
         >
           <Typography
-            id={pageIds.h1}
             component="h1"
             sx={{
               fontSize: { xs: 28, sm: 36, md: 44 },
@@ -567,9 +526,6 @@ export default function Salud() {
         >
           {/* ----- Sidebar izquierdo ----- */}
           <Box
-            component="nav"
-            aria-label="Navegación de indicadores de Salud"
-            id={pageIds.nav}
             sx={{
               flexShrink: 0,
               width: { xs: "100%", md: 260 },
@@ -599,8 +555,6 @@ export default function Salud() {
               {INDICADORES.map((sec) => (
                 <ListItemButton
                   key={sec.id}
-                  aria-controls={sec.id}
-                  aria-current={activeId === sec.id ? "true" : undefined}
                   selected={activeId === sec.id}
                   onClick={() => scrollToSection(sec.id)}
                   sx={{
@@ -627,8 +581,6 @@ export default function Salud() {
             <Divider sx={{ my: 2, borderColor: PALETA.divider }} />
 
             <Button
-              id={pageIds.btnPdf}
-              aria-describedby={pageIds.btnPdfDesc}
               onClick={exportarPDF}
               fullWidth
               variant="contained"
@@ -643,9 +595,6 @@ export default function Salud() {
             >
               Descargar informe PDF
             </Button>
-            <Typography id={pageIds.btnPdfDesc} sx={srOnly}>
-              Genera un informe en PDF con un resumen de indicadores.
-            </Typography>
           </Box>
 
           {/* ----- Contenido principal ----- */}
@@ -654,14 +603,8 @@ export default function Salud() {
             <Box
               id="kpis-beneficiarios"
               ref={(el) => (sectionRefs.current["kpis-beneficiarios"] = el)}
-              role="region"
-              aria-labelledby="kpis-beneficiarios-title"
               sx={{ scrollMarginTop: "100px" }}
             >
-              <Typography id="kpis-beneficiarios-title" sx={srOnly} component="h2">
-                KPIs de beneficiarios por sistema
-              </Typography>
-
               <Box
                 sx={{
                   display: "grid",
@@ -700,17 +643,11 @@ export default function Salud() {
             <Box
               id="kpis-desglose"
               ref={(el) => (sectionRefs.current["kpis-desglose"] = el)}
-              role="region"
-              aria-labelledby="kpis-desglose-title"
               sx={{
                 scrollMarginTop: "100px",
                 mb: { xs: 1.5, sm: 2, md: 2.5 },
               }}
             >
-              <Typography id="kpis-desglose-title" sx={srOnly} component="h2">
-                KPIs de titulares y cargas por sistema
-              </Typography>
-
               <Box
                 sx={{
                   display: "grid",
@@ -768,22 +705,16 @@ export default function Salud() {
             <Box
               id="grafico-sexo"
               ref={(el) => (sectionRefs.current["grafico-sexo"] = el)}
-              role="region"
-              aria-labelledby="grafico-sexo-title"
               sx={{
                 scrollMarginTop: "100px",
                 mb: { xs: 2.5, sm: 3 },
               }}
             >
-              <Typography id="grafico-sexo-title" sx={srOnly} component="h2">
-                Población por sexo y sistema
-              </Typography>
-
               <Box
                 sx={{
                   display: "flex",
                   flexDirection: { xs: "column", md: "row" },
-                  alignItems: { xs: "stretch", md: "center" },
+                  alignItems: { xs: "stretch", md: "center" }, // centrado vertical en desktop
                   gap: { xs: 1.5, md: 3 },
                 }}
               >
@@ -801,7 +732,7 @@ export default function Salud() {
                   <GraficoPoblacionSexoSalud />
                 </Box>
 
-                {/* texto lateral */}
+                {/* texto lateral estilo macroeconomía */}
                 <Box
                   sx={{
                     flexShrink: 0,
@@ -857,19 +788,13 @@ export default function Salud() {
             <Box
               id="grafico-indicadores"
               ref={(el) => (sectionRefs.current["grafico-indicadores"] = el)}
-              role="region"
-              aria-labelledby="grafico-indicadores-title"
               sx={{ scrollMarginTop: "100px", mb: { xs: 4, sm: 5 } }}
             >
-              <Typography id="grafico-indicadores-title" sx={srOnly} component="h2">
-                Financiamiento y gasto (índice)
-              </Typography>
-
               <Box
                 sx={{
                   display: "flex",
                   flexDirection: { xs: "column", md: "row" },
-                  alignItems: { xs: "stretch", md: "center" },
+                  alignItems: { xs: "stretch", md: "center" }, // centrado vertical
                   gap: { xs: 1.5, md: 3 },
                 }}
               >
@@ -883,12 +808,11 @@ export default function Salud() {
                     borderRadius: 2,
                     p: { xs: 1.25, sm: 1.75, md: 2 },
                   }}
-                  aria-label="Gráfico de tendencias sobre financiamiento y gasto en salud, base 100"
                 >
                   <GraficoIndicadoresSalud />
                 </Box>
 
-                {/* texto lateral */}
+                {/* texto lateral "Cómo usar estos datos" */}
                 <Box
                   sx={{
                     flexShrink: 0,

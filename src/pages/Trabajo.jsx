@@ -66,18 +66,6 @@ const COLORS = {
   cardBorderTop: PALETA.fesYellow,
 };
 
-const srOnly = {
-  position: "absolute",
-  width: 1,
-  height: 1,
-  padding: 0,
-  margin: -1,
-  overflow: "hidden",
-  clip: "rect(0, 0, 0, 0)",
-  whiteSpace: "nowrap",
-  border: 0,
-};
-
 const formMiles = (n) => Math.round((n ?? 0) / 1000).toLocaleString("es-CL");
 
 const KPI_HEIGHT = { xs: 96, sm: 108, md: 116 };
@@ -211,8 +199,6 @@ export default function Trabajo() {
   const [desempleo, setDesempleo] = useState(null);
   const [esiUlt, setEsiUlt] = useState(null);
 
-  const [loadingKpi, setLoadingKpi] = useState(true); // <-- para aria-live
-
   const theme = useTheme();
   const isXs = useMediaQuery(theme.breakpoints.down("md"));
 
@@ -246,19 +232,19 @@ export default function Trabajo() {
   };
 
   useEffect(() => {
-    Promise.all([
-      getAnual().then((rows) => {
-        const data = Array.isArray(rows) ? rows : [];
-        if (!data.length) return;
-        const ultimo = data.reduce((a, b) => (a.anio > b.anio ? a : b));
-        setFuerza(ultimo.fuerza_laboral);
-      }),
-      getTasas({ periodo: "2024T2", sexo: "Nacional" }).then((rows) => {
-        const r = (Array.isArray(rows) ? rows : [])[0];
-        if (r?.td != null) setDesempleo(r.td);
-      }),
-      getESIIngresosUltimo().then((r) => setEsiUlt(r)),
-    ]).finally(() => setLoadingKpi(false));
+    getAnual().then((rows) => {
+      const data = Array.isArray(rows) ? rows : [];
+      if (!data.length) return;
+      const ultimo = data.reduce((a, b) => (a.anio > b.anio ? a : b));
+      setFuerza(ultimo.fuerza_laboral);
+    });
+
+    getTasas({ periodo: "2024T2", sexo: "Nacional" }).then((rows) => {
+      const r = (Array.isArray(rows) ? rows : [])[0];
+      if (r?.td != null) setDesempleo(r.td);
+    });
+
+    getESIIngresosUltimo().then((r) => setEsiUlt(r));
   }, []);
 
   const handleDescargarReporte = () => {
@@ -520,8 +506,7 @@ export default function Trabajo() {
 
     doc.save("reporte_trabajo.pdf");
   };
-
-  const SectionCard = ({ title, children, description, sx }) => (
+const SectionCard = ({ title, children, description, sx }) => (
     <Paper
       elevation={0}
       sx={{
@@ -613,7 +598,6 @@ export default function Trabajo() {
       >
         {/* CABECERA */}
         <Box
-          component="header"
           sx={{
             textAlign: "center",
             maxWidth: "900px",
@@ -655,13 +639,6 @@ export default function Trabajo() {
           </Typography>
         </Box>
 
-        {/* Región en vivo para estado de carga de KPIs */}
-        <Box aria-live="polite" sx={srOnly}>
-          {loadingKpi
-            ? "Cargando indicadores principales…"
-            : `Indicadores cargados. Fuerza laboral: ${fuerzaValue}. Desempleo: ${desempleoValue}.`}
-        </Box>
-
         {/* LAYOUT PRINCIPAL */}
         <Box
           sx={{
@@ -672,8 +649,6 @@ export default function Trabajo() {
         >
           {/* SIDEBAR */}
           <Box
-            component="nav"
-            aria-label="Índice de indicadores"
             sx={{
               flexShrink: 0,
               width: { xs: "100%", md: 260 },
@@ -700,20 +675,16 @@ export default function Trabajo() {
                 fontSize: "1rem",
                 lineHeight: 1.3,
               }}
-              id="indice-indicadores"
             >
               Indicadores
             </Typography>
 
-            <List dense sx={{ py: 0 }} aria-labelledby="indice-indicadores" role="list">
+            <List dense sx={{ py: 0 }}>
               {INDICADORES.map((sec) => (
                 <ListItemButton
                   key={sec.id}
                   selected={activeId === sec.id}
                   onClick={() => scrollToSection(sec.id)}
-                  aria-controls={sec.id}
-                  aria-current={activeId === sec.id ? "true" : undefined}
-                  role="listitem"
                   sx={{
                     borderRadius: 1.5,
                     mb: 0.5,
@@ -760,7 +731,6 @@ export default function Trabajo() {
                 boxShadow: "0 4px 10px rgba(0,0,0,0.15)",
                 "&:hover": { backgroundColor: COLORS.ctaBgHover },
               }}
-              aria-label="Descargar reporte en PDF"
             >
               Descargar reporte PDF
             </Button>
@@ -807,9 +777,6 @@ export default function Trabajo() {
                 justifyItems: "stretch",
                 minWidth: 0,
               }}
-              role="region"
-              aria-label="Indicadores clave del mercado laboral"
-              aria-busy={loadingKpi ? "true" : "false"}
             >
               {[
                 {
@@ -884,46 +851,30 @@ export default function Trabajo() {
               {/* IZQUIERDA: los dos primeros gráficos uno debajo del otro */}
               <Box sx={{ flex: 1, minWidth: 0 }}>
                 {/* PRIMER GRÁFICO */}
-                <Box
-                  id="section-esi-anual"
-                  ref={(el) =>
-                    (sectionRefs.current["section-esi-anual"] = el)
-                  }
-                  sx={{ scrollMarginTop: "100px" }}
-                  component="section"
-                  role="region"
-                  aria-labelledby="h-esi-anual"
-                >
-                  {/* H2 accesible (sr-only), la cabecera visible la dibuja SectionCard */}
-                  <Typography id="h-esi-anual" component="h2" sx={srOnly}>
-                    Ingreso medio anual — ESI (2018–2024)
-                  </Typography>
-
-                  <SectionCard
-                    title="Ingreso medio anual — ESI (2018–2024)"
-                    description={
-                      "Este indicador resume cuánto están ganando hombres y mujeres según la Encuesta Suplementaria de Ingresos. Permite ver si los ingresos suben o se estancan y cuál es la brecha de género en términos concretos."
-                    }
-                  >
-                    <GraficoESIIngresos />
-                  </SectionCard>
-                </Box>
-
-                {/* SEGUNDO GRÁFICO */}
+<Box
+  id="section-esi-anual"
+  ref={(el) =>
+    (sectionRefs.current["section-esi-anual"] = el)
+  }
+  sx={{ scrollMarginTop: "100px" }}
+>
+  <SectionCard
+    title="Ingreso medio anual — ESI (2018–2024)"
+    description={
+      "Este indicador resume cuánto están ganando hombres y mujeres según la Encuesta Suplementaria de Ingresos. Permite ver si los ingresos suben o se estancan y cuál es la brecha de género en términos concretos."
+    }
+  >
+    <GraficoESIIngresos />
+  </SectionCard>
+</Box>
+{/* SEGUNDO GRÁFICO */}
                 <Box
                   id="section-fuerza-desempleo"
                   ref={(el) =>
                     (sectionRefs.current["section-fuerza-desempleo"] = el)
                   }
                   sx={{ scrollMarginTop: "100px" }}
-                  component="section"
-                  role="region"
-                  aria-labelledby="h-fuerza-desempleo"
                 >
-                  <Typography id="h-fuerza-desempleo" component="h2" sx={srOnly}>
-                    Fuerza Laboral y Desempleo
-                  </Typography>
-
                   <SectionCard
                     title="Fuerza Laboral y Desempleo"
                     description={
@@ -936,96 +887,94 @@ export default function Trabajo() {
               </Box>
 
               {/* DERECHA: 3 párrafos */}
-              <Box
-                sx={{
-                  flexBasis: { xs: "100%", md: "35%", lg: "32%" },
-                  flexShrink: 0,
-                  maxWidth: { xs: "100%", md: "35%", lg: "32%" },
-                  backgroundColor: "transparent",
-                  borderLeft: {
-                    md: `1px solid ${PALETA_TEXT.neutralBorder}`,
-                  },
-                  pl: { md: 3, lg: 4 },
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "center",
-                }}
-                component="aside"
-                aria-label="Contexto y orientaciones"
-              >
-                <Typography
-                  sx={{
-                    color: PALETA_TEXT.textSecondary,
-                    fontWeight: 800,
-                    textAlign: "center",
-                    mb: { xs: 1, sm: 1.25 },
-                    color: "#1F2937",
-                    letterSpacing: 0.2,
-                  }}
-                  component="h2"
-                >
-                  Hacia un Trabajo Digno y Corresponsable:
-                </Typography>
+<Box
+  sx={{
+    flexBasis: { xs: "100%", md: "35%", lg: "32%" },
+    flexShrink: 0,
+    maxWidth: { xs: "100%", md: "35%", lg: "32%" },
+    backgroundColor: "transparent",
+    borderLeft: {
+      md: `1px solid ${PALETA_TEXT.neutralBorder}`,
+    },
+    pl: { md: 3, lg: 4 },
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "center",
+  }}
+>
+  <Typography
+    sx={{
+      color: PALETA_TEXT.textSecondary,
+          fontWeight: 800,
+          textAlign: "center",
+          mb: { xs: 1, sm: 1.25 },
+          color: "#1F2937",
+          letterSpacing: 0.2,
+    }}
+  >
+    Hacia un Trabajo Digno y Corresponsable:
+  </Typography>
 
-                {/* PÁRRAFO 1 */}
-                <Typography
-                  sx={{
-                    color: PALETA_TEXT.textSecondary,
-                    fontSize: { xs: "0.95rem", md: "0.95rem" },
-                    lineHeight: 1.55,
-                    maxWidth: 500,
-                    whiteSpace: "pre-line",
-                    mt: { xs: 2, md: 3 },
-                    mb: { xs: 2, md: 3 },
-                  }}
-                >
-                  La experiencia reciente mostró, además, riesgos y costos trasladados a los
-                  hogares (equipos, conectividad, espacios), jornadas extendidas y efectos
-                  psicosociales que se hicieron especialmente visibles en el sector público,
-                  junto con una sobrecarga de cuidados con sesgo de género que vuelve urgente
-                  contar con un Sistema Nacional de Cuidados.
-                </Typography>
 
-                {/* PÁRRAFO 2 */}
-                <Typography
-                  sx={{
-                    color: PALETA_TEXT.textSecondary,
-                    fontSize: { xs: "0.95rem", md: "0.95rem" },
-                    lineHeight: 1.55,
-                    maxWidth: 500,
-                    whiteSpace: "pre-line",
-                    mt: { xs: 3, md: 4 },
-                    mb: { xs: 1, md: 1 },
-                  }}
-                >
-                  Con ese marco, proponemos avanzar en cuatro frentes: (1) regular el trabajo
-                  digital y de plataformas con enfoque de salud laboral y
-                  corresponsabilidad; (2) instalar una política robusta de cuidados; (3)
-                  garantizar condiciones dignas en los servicios públicos; y (4) promover
-                  negociación colectiva y participación juvenil para incidir en las
-                  mutaciones del empleo. Son pasos claves para productividad, bienestar y
-                  cohesión social.
-                </Typography>
+  {/* PÁRRAFO 1 */}
+  <Typography
+    sx={{
+      color: PALETA_TEXT.textSecondary,
+      fontSize: { xs: "0.95rem", md: "0.95rem" },
+      lineHeight: 1.55,
+      maxWidth: 500,
+      whiteSpace: "pre-line",
+      mt: { xs: 2, md: 3 },
+      mb: { xs: 2, md: 3 },
+    }}
+  >
+    La experiencia reciente mostró, además, riesgos y costos trasladados a los
+    hogares (equipos, conectividad, espacios), jornadas extendidas y efectos
+    psicosociales que se hicieron especialmente visibles en el sector público,
+    junto con una sobrecarga de cuidados con sesgo de género que vuelve urgente
+    contar con un Sistema Nacional de Cuidados.
+  </Typography>
 
-                {/* PÁRRAFO 3 */}
-                <Typography
-                  sx={{
-                    color: PALETA_TEXT.textSecondary,
-                    fontSize: { xs: "0.95rem", md: "0.95rem" },
-                    lineHeight: 1.55,
-                    maxWidth: 500,
-                    whiteSpace: "pre-line",
-                    mt: { xs: 3, md: 4 },
-                    mb: { xs: 1, md: 1 },
-                  }}
-                >
-                  Explora los gráficos de esta sección, compara series y territorios, y
-                  descarga las bases para producir tus propios análisis; si publicas o
-                  compartes resultados, cita siempre la fuente y el período de los datos para
-                  sostener una conversación laboral informada y útil para la toma de
-                  decisiones.
-                </Typography>
-              </Box>
+  {/* PÁRRAFO 2 (más abajo aún) */}
+  <Typography
+    sx={{
+      color: PALETA_TEXT.textSecondary,
+      fontSize: { xs: "0.95rem", md: "0.95rem" },
+      lineHeight: 1.55,
+      maxWidth: 500,
+      whiteSpace: "pre-line",
+      mt: { xs: 3, md: 4 }, // <-- bajado más
+      mb: { xs: 1, md: 1 },
+    }}
+  >
+    Con ese marco, proponemos avanzar en cuatro frentes: (1) regular el trabajo
+    digital y de plataformas con enfoque de salud laboral y
+    corresponsabilidad; (2) instalar una política robusta de cuidados; (3)
+    garantizar condiciones dignas en los servicios públicos; y (4) promover
+    negociación colectiva y participación juvenil para incidir en las
+    mutaciones del empleo. Son pasos claves para productividad, bienestar y
+    cohesión social.
+  </Typography>
+
+  {/* PÁRRAFO 3 (muy abajo) */}
+  <Typography
+    sx={{
+      color: PALETA_TEXT.textSecondary,
+      fontSize: { xs: "0.95rem", md: "0.95rem" },
+      lineHeight: 1.55,
+      maxWidth: 500,
+      whiteSpace: "pre-line",
+     mt: { xs: 3, md: 4 }, // <-- bajado más
+      mb: { xs: 1, md: 1 },
+    }}
+  >
+    Explora los gráficos de esta sección, compara series y territorios, y
+    descarga las bases para producir tus propios análisis; si publicas o
+    compartes resultados, cita siempre la fuente y el período de los datos para
+    sostener una conversación laboral informada y útil para la toma de
+    decisiones.
+  </Typography>
+</Box>
             </Box>
 
             {/* === RESTO DE SECCIONES === */}
@@ -1036,14 +985,7 @@ export default function Trabajo() {
                   el)
               }
               sx={{ scrollMarginTop: "100px" }}
-              component="section"
-              role="region"
-              aria-labelledby="h-ingreso-por-sexo-2018-2024"
             >
-              <Typography id="h-ingreso-por-sexo-2018-2024" component="h2" sx={srOnly}>
-                Ingreso promedio por sexo (2018–2024)
-              </Typography>
-
               <SectionCard
                 title="Ingreso promedio por sexo (2018–2024)"
                 description={
@@ -1060,14 +1002,7 @@ export default function Trabajo() {
                 (sectionRefs.current["section-cotizaciones"] = el)
               }
               sx={{ scrollMarginTop: "100px" }}
-              component="section"
-              role="region"
-              aria-labelledby="h-cotizaciones"
             >
-              <Typography id="h-cotizaciones" component="h2" sx={srOnly}>
-                Cotización previsional y de salud
-              </Typography>
-
               <SectionCard
                 title="Cotización previsional y de salud"
                 description={
@@ -1082,14 +1017,7 @@ export default function Trabajo() {
               id="section-jornada"
               ref={(el) => (sectionRefs.current["section-jornada"] = el)}
               sx={{ scrollMarginTop: "100px" }}
-              component="section"
-              role="region"
-              aria-labelledby="h-jornada"
             >
-              <Typography id="h-jornada" component="h2" sx={srOnly}>
-                Tipo de Jornada Laboral
-              </Typography>
-
               <SectionCard
                 title="Tipo de Jornada Laboral"
                 description={
@@ -1107,14 +1035,7 @@ export default function Trabajo() {
                   el)
               }
               sx={{ scrollMarginTop: "100px" }}
-              component="section"
-              role="region"
-              aria-labelledby="h-ingreso-promedio-anual-sexo"
             >
-              <Typography id="h-ingreso-promedio-anual-sexo" component="h2" sx={srOnly}>
-                Ingreso promedio anual por sexo
-              </Typography>
-
               <SectionCard
                 title="Ingreso promedio anual por sexo"
                 description={
@@ -1129,14 +1050,7 @@ export default function Trabajo() {
               id="section-tasas-ene"
               ref={(el) => (sectionRefs.current["section-tasas-ene"] = el)}
               sx={{ scrollMarginTop: "100px" }}
-              component="section"
-              role="region"
-              aria-labelledby="h-tasas-ene"
             >
-              <Typography id="h-tasas-ene" component="h2" sx={srOnly}>
-                Tasas laborales y subutilización (ENE)
-              </Typography>
-
               <SectionCard
                 title="Tasas laborales y subutilización (ENE)"
                 description={
@@ -1151,14 +1065,7 @@ export default function Trabajo() {
               id="section-pet"
               ref={(el) => (sectionRefs.current["section-pet"] = el)}
               sx={{ scrollMarginTop: "100px" }}
-              component="section"
-              role="region"
-              aria-labelledby="h-pet"
             >
-              <Typography id="h-pet" component="h2" sx={srOnly}>
-                Población en edad de trabajar
-              </Typography>
-
               <SectionCard
                 title="Población en edad de trabajar"
                 description={
