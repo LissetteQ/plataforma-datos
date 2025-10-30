@@ -67,8 +67,7 @@ const BloqueEconomico = ({
   // altura del gráfico -> más rectangular
   const chartHeight = isXs ? 220 : isSm ? 260 : 300;
 
-  // color translúcido para barras
-  const colorSuave = useMemo(() => `${colorPrincipal}22`, [colorPrincipal]);
+
 
   // IDs accesibles
   const titleId = useMemo(

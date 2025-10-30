@@ -1,11 +1,10 @@
-// src/App.jsx
 import React from "react";
 import { Routes, Route } from "react-router-dom";
 
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 
-// Páginas principales
+// Páginas
 import Home from "./pages/Home.jsx";
 import Trabajo from "./pages/Trabajo.jsx";
 import Salud from "./pages/Salud.jsx";
@@ -13,7 +12,6 @@ import Educacion from "./pages/Educacion.jsx";
 import Macroeconomia from "./pages/Macroeconomia.jsx";
 import Mapa from "./pages/Mapa.jsx";
 import Contactanos from "./pages/Contactanos.jsx";
-import Documentacion from "./pages/Documentacion.jsx";
 import Buscar from "./pages/Buscar.jsx";
 import { Box } from "@mui/material";
 
@@ -54,7 +52,6 @@ function App() {
           <Route path="/macroeconomia" element={<Macroeconomia />} />
           <Route path="/mapa" element={<Mapa />} />
           <Route path="/contacto" element={<Contactanos />} />
-          {/* <Route path="/documentacion" element={<Documentacion />} /> */}
           <Route path="/buscar" element={<Buscar />} />
         </Routes>
       </main>
