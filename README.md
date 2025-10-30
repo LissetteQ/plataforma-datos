@@ -168,3 +168,5 @@ Enviar al encargado:
 ✅ ZIP plataforma-datos-wp.zip
 
 ✅ Este documento (README-DEPLOY.md)
+
+
