@@ -1,0 +1,16 @@
+[build]
+  # Si tienes frontend React (CRA/Vite), deja el comando que uses:
+  command = "npm run build"
+  publish = "build"
+
+[functions]
+  directory = "backend/netlify/functions"
+  node_bundler = "esbuild"
+  external_node_modules = ["express","cors","axios","csv-parse","dotenv","serverless-http","@netlify/functions"]
+
+# Redirige /api/* a la function
+[[redirects]]
+  from = "/api/*"
+  to   = "/.netlify/functions/api/:splat"
+  status = 200
+  force = true
