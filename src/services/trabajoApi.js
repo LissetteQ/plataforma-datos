@@ -83,12 +83,8 @@ const seriesFromDataset = (ds = []) => {
 
   return Array.from(acc.entries())
     .map(([anio, g]) => {
-      const hombres = g.Hombres.c
-        ? Math.round(g.Hombres.s / g.Hombres.c)
-        : null;
-      const mujeres = g.Mujeres.c
-        ? Math.round(g.Mujeres.s / g.Mujeres.c)
-        : null;
+      const hombres = g.Hombres.c ? Math.round(g.Hombres.s / g.Hombres.c) : null;
+      const mujeres = g.Mujeres.c ? Math.round(g.Mujeres.s / g.Mujeres.c) : null;
 
       const total =
         hombres != null && mujeres != null
@@ -123,7 +119,7 @@ export const getESIIngresos = async (params = {}) => {
     );
   }
 
-  // 2) Fallback: calculado desde el dataset general (ya lo tienes en CSV)
+  // 2) Fallback: calculado desde el dataset general
   const ds = await getDataset();
   return seriesFromDataset(ds);
 };
@@ -134,12 +130,11 @@ export const getESIIngresosUltimo = async () => {
   if (!Array.isArray(rows) || rows.length === 0) {
     return { anio: null, total: null, hombres: null, mujeres: null };
   }
-  // elegir el año más alto
   return rows.reduce((a, b) => (a.anio > b.anio ? a : b));
 };
 
-// export default opcional si lo estás usando en otra parte
-export default {
+// ✅ Export por defecto con variable nombrada (evita import/no-anonymous-default-export)
+const trabajoApi = {
   getAnual,
   getDataset,
   getTasas,
@@ -148,3 +143,5 @@ export default {
   getESIIngresos,
   getESIIngresosUltimo,
 };
+
+export default trabajoApi;

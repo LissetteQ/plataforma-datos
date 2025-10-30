@@ -10,7 +10,15 @@ const STROKE = "rgba(0,0,0,0.14)";
 
 const parseCLP = (v) => {
   if (v == null || v === "") return null;
-  const s = String(v).replace(/[^\d,.\-]/g, "").replace(/\./g, "").replace(/,/g, ".");
+
+  const s = String(v)
+    // deja solo dígitos, coma, punto y guion (guion al final, sin escape)
+    .replace(/[^\d,.-]/g, "")
+    // quita separadores de miles con punto
+    .replace(/\./g, "")
+    // cambia coma decimal por punto
+    .replace(/,/g, ".");
+
   const n = Number(s);
   return Number.isFinite(n) ? n : null;
 };
@@ -78,7 +86,8 @@ export default function GraficoIngresoSexo() {
 
     let ult = null;
     for (let i = years.length - 1; i >= 0; i--) {
-      const h = hombres[i], m = mujeres[i];
+      const h = hombres[i],
+        m = mujeres[i];
       if (h != null && m != null) {
         const brecha = h - m;
         const pct = m > 0 ? (brecha / m) * 100 : 0;
@@ -166,10 +175,7 @@ export default function GraficoIngresoSexo() {
         slotProps={{
           legend: {
             direction: "horizontal",
-            position: {
-              vertical: "bottom",
-              horizontal: "center",
-            },
+            position: { vertical: "bottom", horizontal: "center" },
             sx: {
               "& li": {
                 fontSize: labelFont,

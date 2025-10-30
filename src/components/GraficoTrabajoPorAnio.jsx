@@ -33,7 +33,8 @@ const COLORS = {
 const parseCL = (v) => {
   if (v == null || v === "") return null;
   const s = String(v)
-    .replace(/[^\d,.\-]/g, "")
+    // deja sólo dígitos, coma, punto y guion (guion al final, sin escape)
+    .replace(/[^\d,.-]/g, "")
     .replace(/\./g, "")
     .replace(/,/g, ".");
   const n = Number(s);
@@ -61,9 +62,8 @@ export default function GraficoTrabajoPorAnio({
 
   const theme = useTheme();
 
-  // 👇 Nuevo: consideramos "compacto" todo <900px
+  // Compacto para < md (~<900px)
   const isCompact = useMediaQuery(theme.breakpoints.down("md"));
-
   const tickFont = isCompact ? 11 : 12;
 
   useEffect(() => {
@@ -151,7 +151,6 @@ export default function GraficoTrabajoPorAnio({
     <Box sx={{ mt: { xs: 1.25, md: 2.25 }, width: "100%", minWidth: 0 }}>
       <Box
         sx={{
-          // en pantallas compactas dejamos un poquito más de alto
           height: { xs: heightXs + 28, md: heightMd },
           px: { xs: 1, sm: 2, md: 3 },
           width: "100%",
@@ -254,10 +253,7 @@ export default function GraficoTrabajoPorAnio({
         </ChartContainer>
       </Box>
 
-      {/* Fila manual con los años
-         Ahora se muestra en TODA vista "compacta" (<900px),
-         no solo en xs (<600px)
-      */}
+      {/* Fila con años para vista compacta */}
       {isCompact && (
         <Box
           sx={{

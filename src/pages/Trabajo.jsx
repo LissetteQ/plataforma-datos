@@ -10,8 +10,6 @@ import {
   ListItemButton,
   ListItemText,
   Divider,
-  useMediaQuery,
-  useTheme,
 } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 
@@ -198,9 +196,6 @@ export default function Trabajo() {
   const [fuerza, setFuerza] = useState(null);
   const [desempleo, setDesempleo] = useState(null);
   const [esiUlt, setEsiUlt] = useState(null);
-
-  const theme = useTheme();
-  const isXs = useMediaQuery(theme.breakpoints.down("md"));
 
   const INDICADORES = [
     { id: "section-esi-anual", label: "Ingreso medio anual — ESI (2018–2024)" },
@@ -506,7 +501,8 @@ export default function Trabajo() {
 
     doc.save("reporte_trabajo.pdf");
   };
-const SectionCard = ({ title, children, description, sx }) => (
+
+  const SectionCard = ({ title, children, description, sx }) => (
     <Paper
       elevation={0}
       sx={{
@@ -581,10 +577,6 @@ const SectionCard = ({ title, children, description, sx }) => (
       )}
     </Paper>
   );
-
-  const fuerzaValue = fuerza != null ? formMiles(fuerza) : "—";
-  const desempleoValue =
-    desempleo != null ? `${desempleo.toFixed(1)}%` : "—";
 
   return (
     <Box sx={{ bgcolor: PALETA_TEXT.neutralBg }}>
@@ -790,9 +782,7 @@ const SectionCard = ({ title, children, description, sx }) => (
                   icon: TrendingDownIcon,
                   title: "Desempleo",
                   value:
-                    desempleo != null
-                      ? `${desempleo.toFixed(1)}%`
-                      : "—",
+                    desempleo != null ? `${desempleo.toFixed(1)}%` : "—",
                   subtitle: "2024T2",
                   iconColor: COLORS.accent,
                 },
@@ -851,23 +841,24 @@ const SectionCard = ({ title, children, description, sx }) => (
               {/* IZQUIERDA: los dos primeros gráficos uno debajo del otro */}
               <Box sx={{ flex: 1, minWidth: 0 }}>
                 {/* PRIMER GRÁFICO */}
-<Box
-  id="section-esi-anual"
-  ref={(el) =>
-    (sectionRefs.current["section-esi-anual"] = el)
-  }
-  sx={{ scrollMarginTop: "100px" }}
->
-  <SectionCard
-    title="Ingreso medio anual — ESI (2018–2024)"
-    description={
-      "Este indicador resume cuánto están ganando hombres y mujeres según la Encuesta Suplementaria de Ingresos. Permite ver si los ingresos suben o se estancan y cuál es la brecha de género en términos concretos."
-    }
-  >
-    <GraficoESIIngresos />
-  </SectionCard>
-</Box>
-{/* SEGUNDO GRÁFICO */}
+                <Box
+                  id="section-esi-anual"
+                  ref={(el) =>
+                    (sectionRefs.current["section-esi-anual"] = el)
+                  }
+                  sx={{ scrollMarginTop: "100px" }}
+                >
+                  <SectionCard
+                    title="Ingreso medio anual — ESI (2018–2024)"
+                    description={
+                      "Este indicador resume cuánto están ganando hombres y mujeres según la Encuesta Suplementaria de Ingresos. Permite ver si los ingresos suben o se estancan y cuál es la brecha de género en términos concretos."
+                    }
+                  >
+                    <GraficoESIIngresos />
+                  </SectionCard>
+                </Box>
+
+                {/* SEGUNDO GRÁFICO */}
                 <Box
                   id="section-fuerza-desempleo"
                   ref={(el) =>
@@ -887,94 +878,92 @@ const SectionCard = ({ title, children, description, sx }) => (
               </Box>
 
               {/* DERECHA: 3 párrafos */}
-<Box
-  sx={{
-    flexBasis: { xs: "100%", md: "35%", lg: "32%" },
-    flexShrink: 0,
-    maxWidth: { xs: "100%", md: "35%", lg: "32%" },
-    backgroundColor: "transparent",
-    borderLeft: {
-      md: `1px solid ${PALETA_TEXT.neutralBorder}`,
-    },
-    pl: { md: 3, lg: 4 },
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "center",
-  }}
->
-  <Typography
-    sx={{
-      color: PALETA_TEXT.textSecondary,
-          fontWeight: 800,
-          textAlign: "center",
-          mb: { xs: 1, sm: 1.25 },
-          color: "#1F2937",
-          letterSpacing: 0.2,
-    }}
-  >
-    Hacia un Trabajo Digno y Corresponsable:
-  </Typography>
+              <Box
+                sx={{
+                  flexBasis: { xs: "100%", md: "35%", lg: "32%" },
+                  flexShrink: 0,
+                  maxWidth: { xs: "100%", md: "35%", lg: "32%" },
+                  backgroundColor: "transparent",
+                  borderLeft: {
+                    md: `1px solid ${PALETA_TEXT.neutralBorder}`,
+                  },
+                  pl: { md: 3, lg: 4 },
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "center",
+                }}
+              >
+                <Typography
+                  sx={{
+                    fontWeight: 800,
+                    textAlign: "center",
+                    mb: { xs: 1, sm: 1.25 },
+                    color: "#1F2937", // ← única clave color (se quitó duplicado)
+                    letterSpacing: 0.2,
+                  }}
+                >
+                  Hacia un Trabajo Digno y Corresponsable:
+                </Typography>
 
+                {/* PÁRRAFO 1 */}
+                <Typography
+                  sx={{
+                    color: PALETA_TEXT.textSecondary,
+                    fontSize: { xs: "0.95rem", md: "0.95rem" },
+                    lineHeight: 1.55,
+                    maxWidth: 500,
+                    whiteSpace: "pre-line",
+                    mt: { xs: 2, md: 3 },
+                    mb: { xs: 2, md: 3 },
+                  }}
+                >
+                  La experiencia reciente mostró, además, riesgos y costos trasladados a los
+                  hogares (equipos, conectividad, espacios), jornadas extendidas y efectos
+                  psicosociales que se hicieron especialmente visibles en el sector público,
+                  junto con una sobrecarga de cuidados con sesgo de género que vuelve urgente
+                  contar con un Sistema Nacional de Cuidados.
+                </Typography>
 
-  {/* PÁRRAFO 1 */}
-  <Typography
-    sx={{
-      color: PALETA_TEXT.textSecondary,
-      fontSize: { xs: "0.95rem", md: "0.95rem" },
-      lineHeight: 1.55,
-      maxWidth: 500,
-      whiteSpace: "pre-line",
-      mt: { xs: 2, md: 3 },
-      mb: { xs: 2, md: 3 },
-    }}
-  >
-    La experiencia reciente mostró, además, riesgos y costos trasladados a los
-    hogares (equipos, conectividad, espacios), jornadas extendidas y efectos
-    psicosociales que se hicieron especialmente visibles en el sector público,
-    junto con una sobrecarga de cuidados con sesgo de género que vuelve urgente
-    contar con un Sistema Nacional de Cuidados.
-  </Typography>
+                {/* PÁRRAFO 2 */}
+                <Typography
+                  sx={{
+                    color: PALETA_TEXT.textSecondary,
+                    fontSize: { xs: "0.95rem", md: "0.95rem" },
+                    lineHeight: 1.55,
+                    maxWidth: 500,
+                    whiteSpace: "pre-line",
+                    mt: { xs: 3, md: 4 },
+                    mb: { xs: 1, md: 1 },
+                  }}
+                >
+                  Con ese marco, proponemos avanzar en cuatro frentes: (1) regular el trabajo
+                  digital y de plataformas con enfoque de salud laboral y
+                  corresponsabilidad; (2) instalar una política robusta de cuidados; (3)
+                  garantizar condiciones dignas en los servicios públicos; y (4) promover
+                  negociación colectiva y participación juvenil para incidir en las
+                  mutaciones del empleo. Son pasos claves para productividad, bienestar y
+                  cohesión social.
+                </Typography>
 
-  {/* PÁRRAFO 2 (más abajo aún) */}
-  <Typography
-    sx={{
-      color: PALETA_TEXT.textSecondary,
-      fontSize: { xs: "0.95rem", md: "0.95rem" },
-      lineHeight: 1.55,
-      maxWidth: 500,
-      whiteSpace: "pre-line",
-      mt: { xs: 3, md: 4 }, // <-- bajado más
-      mb: { xs: 1, md: 1 },
-    }}
-  >
-    Con ese marco, proponemos avanzar en cuatro frentes: (1) regular el trabajo
-    digital y de plataformas con enfoque de salud laboral y
-    corresponsabilidad; (2) instalar una política robusta de cuidados; (3)
-    garantizar condiciones dignas en los servicios públicos; y (4) promover
-    negociación colectiva y participación juvenil para incidir en las
-    mutaciones del empleo. Son pasos claves para productividad, bienestar y
-    cohesión social.
-  </Typography>
-
-  {/* PÁRRAFO 3 (muy abajo) */}
-  <Typography
-    sx={{
-      color: PALETA_TEXT.textSecondary,
-      fontSize: { xs: "0.95rem", md: "0.95rem" },
-      lineHeight: 1.55,
-      maxWidth: 500,
-      whiteSpace: "pre-line",
-     mt: { xs: 3, md: 4 }, // <-- bajado más
-      mb: { xs: 1, md: 1 },
-    }}
-  >
-    Explora los gráficos de esta sección, compara series y territorios, y
-    descarga las bases para producir tus propios análisis; si publicas o
-    compartes resultados, cita siempre la fuente y el período de los datos para
-    sostener una conversación laboral informada y útil para la toma de
-    decisiones.
-  </Typography>
-</Box>
+                {/* PÁRRAFO 3 */}
+                <Typography
+                  sx={{
+                    color: PALETA_TEXT.textSecondary,
+                    fontSize: { xs: "0.95rem", md: "0.95rem" },
+                    lineHeight: 1.55,
+                    maxWidth: 500,
+                    whiteSpace: "pre-line",
+                    mt: { xs: 3, md: 4 },
+                    mb: { xs: 1, md: 1 },
+                  }}
+                >
+                  Explora los gráficos de esta sección, compara series y territorios, y
+                  descarga las bases para producir tus propios análisis; si publicas o
+                  compartes resultados, cita siempre la fuente y el período de los datos para
+                  sostener una conversación laboral informada y útil para la toma de
+                  decisiones.
+                </Typography>
+              </Box>
             </Box>
 
             {/* === RESTO DE SECCIONES === */}
