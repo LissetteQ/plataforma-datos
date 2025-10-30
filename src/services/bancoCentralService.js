@@ -1,7 +1,10 @@
-// src/services/bancoCentralService.js
 import axios from "axios";
 
-const API_BASE_URL = "http://localhost:5000/api/banco-central";
+// Usa variable de entorno si existe, y fallback a localhost solo en desarrollo
+const API_BASE_URL =
+  process.env.REACT_APP_API_URL
+    ? `${process.env.REACT_APP_API_URL}/banco-central`
+    : "http://localhost:5000/api/banco-central";
 
 export const bancoCentralService = {
   getSerie: async (serieId, startDate, endDate) => {
